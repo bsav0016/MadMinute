@@ -2,31 +2,54 @@ import { CustomHeaderView } from "@/components/CustomHeaderView";
 import { ThemedView } from "@/components/ThemedView";
 import { useMadMinute } from "@/contexts/MadMinuteContext/MadMinuteContext";
 import { useRouteTo } from "@/contexts/RouteContext";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { KeyboardAvoidingView, Platform, StyleSheet, TextInput } from "react-native";
 import { Routes } from "./Routes";
 import { ThemedText } from "@/components/ThemedText";
 import { GeneralButton } from "@/components/GeneralButton";
 import { FormattedQuestion } from "@/components/FormattedQuestion";
 import { MadMinuteQuestion } from "@/contexts/MadMinuteContext/MadMinuteQuestion";
+import { useThemeColor } from "@/hooks/useThemeColor";
 
 export default function PlayMadMinute() {
     const { madMinute, addQuestion, submitResponse } = useMadMinute();
     const { routeTo } = useRouteTo();
-    const [timeRemaining, setTimeRemaining] = useState<number>(60);
+    const color = useThemeColor({}, 'text');
+
+    const startTimeRemaining: number = 63
+
+    const [timeRemaining, setTimeRemaining] = useState<number>(startTimeRemaining);
     const [currentQuestion, setCurrentQuestion] = useState<MadMinuteQuestion | undefined>(undefined);
     const [response, setResponse] = useState<string>('');
 
+    const startTimeRef = useRef(0);
+    const timeRemainingRef = useRef(timeRemaining);
+    
     useEffect(() => {
-        const intervalId = setInterval(() => {
-            if (timeRemaining === 1) {
-                routeTo(Routes.Results);
-            }
-            setTimeRemaining((prev) => prev - 1);
-        }, 1000);
+        let timeoutId: NodeJS.Timeout;
 
-        return () => clearInterval(intervalId);
-    }, [timeRemaining, routeTo]);
+        const tick = () => {
+            const now = performance.now();
+            const elapsedTime = Math.floor((now - startTimeRef.current) / 1000);
+            const newTimeRemaining = Math.max(startTimeRemaining - elapsedTime, 0);
+            timeRemainingRef.current = newTimeRemaining;
+
+            setTimeRemaining(newTimeRemaining);
+
+            if (newTimeRemaining <= 0) {
+                routeTo(Routes.Results);
+            } else {
+                requestAnimationFrame(tick);
+            }
+        };
+
+        startTimeRef.current = performance.now();
+        requestAnimationFrame(tick);
+
+        return () => {
+            clearTimeout(timeoutId);
+        };
+    }, [routeTo]);
 
     useEffect(() => {
         if (madMinute.questions.length > 0) {
@@ -46,41 +69,55 @@ export default function PlayMadMinute() {
     }
 
     return (
-        <KeyboardAvoidingView
-            style={styles.screenView}
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
-        >
-            <CustomHeaderView header="Mad Minute" canGoBack={true}>
-                <ThemedView style={styles.timeRemainingContainer}>
-                    <ThemedText type="title">Time: {timeRemaining}</ThemedText>
-                </ThemedView>
-                { currentQuestion &&                    
-                    <ThemedView style={styles.questionContainer}>
-                        <FormattedQuestion question={currentQuestion} />
-                        <TextInput
-                            style={styles.input}
-                            onChangeText={setResponse}
-                            value={response}
-                            keyboardType="numeric"
-                            autoFocus={true}
-                        />
+        <>
+            {timeRemaining > 60 ?
+            <ThemedView style={styles.countdownContainer}>
+                <ThemedText type="countdown">{timeRemaining - 60}</ThemedText>
+            </ThemedView>
+            :
+            <KeyboardAvoidingView
+                style={styles.screenView}
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+            >
+                <CustomHeaderView header="Mad Minute" canGoBack={true}>
+                    <ThemedView style={styles.timeRemainingContainer}>
+                        <ThemedText type="title">Time: {timeRemaining}</ThemedText>
                     </ThemedView>
-                }
-                <ThemedView style={styles.buttonsContainer}>
-                    <ThemedView style={styles.buttonContainer}>
-                        <GeneralButton title="Skip" onPress={submitQuestion} />
+                    { currentQuestion &&                    
+                        <ThemedView style={styles.questionContainer}>
+                            <FormattedQuestion question={currentQuestion} />
+                            <TextInput
+                                style={[styles.input, { color: color, borderColor: color }]}
+                                onChangeText={setResponse}
+                                value={response}
+                                keyboardType="numeric"
+                                autoFocus={true}
+                            />
+                        </ThemedView>
+                    }
+                    <ThemedView style={styles.buttonsContainer}>
+                        <ThemedView style={styles.buttonContainer}>
+                            <GeneralButton title="Skip" onPress={submitQuestion} />
+                        </ThemedView>
+                        <ThemedView style={styles.buttonContainer}>
+                            <GeneralButton title="Next" onPress={submitQuestion} />
+                        </ThemedView>
                     </ThemedView>
-                    <ThemedView style={styles.buttonContainer}>
-                        <GeneralButton title="Next" onPress={submitQuestion} />
-                    </ThemedView>
-                </ThemedView>
-            </CustomHeaderView>
-        </KeyboardAvoidingView>
+                </CustomHeaderView>
+            </KeyboardAvoidingView>
+            }
+        </>
     )
 }
 
 const styles = StyleSheet.create({
+    countdownContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center'
+    },
+
     screenView: {
         flex: 1,
     },
