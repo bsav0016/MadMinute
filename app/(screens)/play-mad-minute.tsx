@@ -15,6 +15,9 @@ export default function PlayMadMinute() {
     const { madMinute, addQuestion, submitResponse } = useMadMinute();
     const { routeTo } = useRouteTo();
     const color = useThemeColor({}, 'text');
+    const surface = useThemeColor({}, 'surface');
+    const border = useThemeColor({}, 'border');
+    const tint = useThemeColor({}, 'tint');
 
     const startTimeRemaining: number = 63
 
@@ -82,13 +85,17 @@ export default function PlayMadMinute() {
             >
                 <CustomHeaderView header="Mad Minute" canGoBack={true}>
                     <ThemedView style={styles.timeRemainingContainer}>
-                        <ThemedText type="title">Time: {timeRemaining}</ThemedText>
+                        <ThemedView style={[styles.timePill, { backgroundColor: surface, borderColor: border }]}>
+                            <ThemedText style={[styles.timeText, { backgroundColor: 'transparent' }]}>Time: {timeRemaining}</ThemedText>
+                        </ThemedView>
                     </ThemedView>
-                    { currentQuestion &&                    
+                    { currentQuestion &&
                         <ThemedView style={styles.questionContainer}>
-                            <FormattedQuestion question={currentQuestion} />
+                            <ThemedView style={[styles.questionCard, { backgroundColor: surface, borderColor: border }]}>
+                                <FormattedQuestion question={currentQuestion} />
+                            </ThemedView>
                             <TextInput
-                                style={[styles.input, { color: color, borderColor: color }]}
+                                style={[styles.input, { color: color, borderColor: tint, backgroundColor: surface }]}
                                 onChangeText={setResponse}
                                 value={response}
                                 keyboardType="numeric"
@@ -98,7 +105,7 @@ export default function PlayMadMinute() {
                     }
                     <ThemedView style={styles.buttonsContainer}>
                         <ThemedView style={styles.buttonContainer}>
-                            <GeneralButton title="Skip" onPress={submitQuestion} />
+                            <GeneralButton title="Skip" onPress={submitQuestion} variant="secondary" />
                         </ThemedView>
                         <ThemedView style={styles.buttonContainer}>
                             <GeneralButton title="Next" onPress={submitQuestion} />
@@ -123,33 +130,57 @@ const styles = StyleSheet.create({
     },
 
     timeRemainingContainer: {
-        marginVertical: 20,
+        marginVertical: 16,
         alignItems: 'center'
     },
 
-    timeRemainingText: {
-        fontSize: 36
+    timePill: {
+        paddingVertical: 8,
+        paddingHorizontal: 24,
+        borderRadius: 24,
+        borderWidth: 1,
+    },
+
+    timeText: {
+        fontSize: 28,
+        lineHeight: 34,
+        fontWeight: '800',
     },
 
     questionContainer: {
-        flex: 1,
+        flex: 2,
         alignItems: 'center',
         justifyContent: 'center',
-        gap: 10
+        gap: 14
+    },
+
+    questionCard: {
+        paddingVertical: 16,
+        paddingHorizontal: 36,
+        borderRadius: 24,
+        borderWidth: 1,
+        shadowColor: '#1c2a6b',
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.1,
+        shadowRadius: 14,
+        elevation: 3,
     },
 
     input: {
-        fontSize: 28,
-        minWidth: 80,
-        borderWidth: 1,
-        borderRadius: 3,
+        fontSize: 32,
+        minWidth: 160,
+        height: 58,
+        borderWidth: 2,
+        borderRadius: 16,
         textAlign: 'center'
     },
 
     buttonsContainer: {
         flex: 1,
         flexDirection: 'row',
-        width: '100%'
+        width: '100%',
+        paddingHorizontal: 12,
+        gap: 8,
     },
 
     buttonContainer: {

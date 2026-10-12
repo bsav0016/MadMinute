@@ -33,7 +33,7 @@ export function CustomHeaderView({
             <ThemedView style={styles.headerView}>
                 {canGoBack &&
                     <TouchableOpacity onPress={handleBackPress} style={styles.backButton}>
-                        <Ionicons name="arrow-back" size={30} color={Colors.button.text} />
+                        <Ionicons name="arrow-back" size={22} color={Colors.button.text} />
                         <ThemedText style={styles.backText}>Back</ThemedText>
                     </TouchableOpacity>
                 }
@@ -59,7 +59,7 @@ const styles = StyleSheet.create({
 
     headerView: {
         width: '100%',
-        height: 60,
+        height: 64,
         justifyContent: 'center',
         flexDirection: 'row',
         alignItems: 'center',
@@ -68,32 +68,35 @@ const styles = StyleSheet.create({
 
     backButton: {
         position: 'absolute',
-        left: 10,
-        top: 10,
+        left: 12,
+        top: 14,
         backgroundColor: Colors.button.background,
         flexDirection: "row",
         justifyContent: "center",
         alignItems: "center",
         width: 'auto',
-        height: 40,
-        paddingRight: 5,
-        borderRadius: 5
+        height: 36,
+        paddingLeft: 8,
+        paddingRight: 14,
+        borderRadius: 18
     },
 
     backText: {
-        fontSize: 14,
+        fontSize: 15,
+        fontWeight: '600',
+        marginLeft: 2,
         color: Colors.button.text
     },
 
     headerTextWithBack: {
-        marginHorizontal: 80, 
+        marginHorizontal: 80,
     },
 
     headerText: {
         flex: 1,
         textAlign: "center",
         fontSize: fontSize,
-        fontWeight: 'bold'
+        fontWeight: '700'
     },
 
     contentView: {

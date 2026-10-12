@@ -1,8 +1,9 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, useWindowDimensions } from 'react-native';
 import MultiSlider from "@ptomasroos/react-native-multi-slider";
 import { ThemedView } from './ThemedView';
 import { ThemedText } from './ThemedText';
+import { Colors } from '@/constants/Colors';
 
 interface MinMaxSliderProps {
     min: number;
@@ -32,6 +33,9 @@ export const MinMaxSlider: React.FC<MinMaxSliderProps> = ({
         }
     };
 
+    const { width } = useWindowDimensions();
+    const sliderLength = Math.min(300, width - 100);
+
     return (
         <ThemedView style={styles.container}>
             <ThemedView style={styles.minMaxLabels}>
@@ -44,14 +48,14 @@ export const MinMaxSlider: React.FC<MinMaxSliderProps> = ({
             </ThemedView>
             <MultiSlider
                 values={[min, max]}
-                sliderLength={300}
+                sliderLength={sliderLength}
                 onValuesChange={handleValuesChange}
                 min={0}
                 max={20}
                 step={1}
                 snapped
-                selectedStyle={{ backgroundColor: '#007bff' }}
-                unselectedStyle={{ backgroundColor: '#ddd' }}
+                selectedStyle={{ backgroundColor: Colors.button.background }}
+                unselectedStyle={{ backgroundColor: '#d9deea' }}
                 markerStyle={styles.marker}
             />
         </ThemedView>
@@ -60,28 +64,31 @@ export const MinMaxSlider: React.FC<MinMaxSliderProps> = ({
 
 const styles = StyleSheet.create({
     container: {
-        padding: 20,
+        paddingVertical: 12,
         justifyContent: 'center',
         alignItems: 'center',
+        backgroundColor: 'transparent',
     },
 
     minMaxLabels: {
         flexDirection: 'row',
         width: '100%',
+        backgroundColor: 'transparent',
     },
 
     label: {
         flex: 1,
         fontSize: 16,
         marginBottom: 10,
-        fontWeight: 'bold',
-        textAlign: 'center'
+        fontWeight: '700',
+        textAlign: 'center',
+        backgroundColor: 'transparent',
     },
 
     marker: {
-        backgroundColor: '#007bff',
-        height: 25,
-        width: 25,
-        borderRadius: 12,
+        backgroundColor: Colors.button.background,
+        height: 28,
+        width: 28,
+        borderRadius: 14,
     },
 });

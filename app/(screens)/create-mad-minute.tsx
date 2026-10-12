@@ -11,8 +11,13 @@ import { useRouteTo } from "@/contexts/RouteContext";
 import { GeneralButton } from "@/components/GeneralButton";
 import { Routes } from "./Routes";
 import { useToast } from "@/contexts/ToastContext";
+import { useThemeColor } from "@/hooks/useThemeColor";
+import { Colors } from "@/constants/Colors";
 
 export default function CreateMadMinute() {
+    const surface = useThemeColor({}, 'surface');
+    const border = useThemeColor({}, 'border');
+    const muted = useThemeColor({}, 'muted');
     const { madMinute, updateSettings, resetMadMinute } = useMadMinute();
     const { routeTo } = useRouteTo();
     const { addToast } = useToast();
@@ -80,24 +85,37 @@ export default function CreateMadMinute() {
                         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                         keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
                     >
-                        <MinMaxSlider 
-                            min={localSettings.minValue} 
-                            max={localSettings.maxValue}
-                            setMinMax={setMinMax}
-                        />
+                        <ThemedView style={[styles.card, { backgroundColor: surface, borderColor: border }]}>
+                            <ThemedText style={[styles.cardTitle, { color: muted }]}>Number range</ThemedText>
+                            <MinMaxSlider
+                                min={localSettings.minValue}
+                                max={localSettings.maxValue}
+                                setMinMax={setMinMax}
+                            />
+                        </ThemedView>
                     </KeyboardAvoidingView>
                     <ThemedView style={styles.buttonsContainer}>
-                        { displayOperators.map((displayOperator) => (
-                            <ThemedView style={styles.buttonContainer} key={displayOperator.value}>
-                                <ThemedText>{displayOperator.text}: </ThemedText>
-                                <Switch
-                                    value={localSettings.availableOperators.includes(displayOperator.value)}
-                                    onValueChange={() => toggleOperator(displayOperator.value)}
-                                    thumbColor={localSettings.availableOperators.includes(displayOperator.value) ? '#007bff' : '#ccc'}
-                                    trackColor={{ false: '#ddd', true: '#007bff' }}
-                                />
-                            </ThemedView>
-                        ))}
+                        <ThemedView style={[styles.card, { backgroundColor: surface, borderColor: border }]}>
+                            <ThemedText style={[styles.cardTitle, { color: muted }]}>Operations</ThemedText>
+                            { displayOperators.map((displayOperator, index) => (
+                                <ThemedView
+                                    style={[
+                                        styles.buttonContainer,
+                                        { backgroundColor: surface },
+                                        index > 0 && { borderTopWidth: 1, borderTopColor: border },
+                                    ]}
+                                    key={displayOperator.value}
+                                >
+                                    <ThemedText style={[styles.operatorLabel, { backgroundColor: 'transparent' }]}>{displayOperator.text}</ThemedText>
+                                    <Switch
+                                        value={localSettings.availableOperators.includes(displayOperator.value)}
+                                        onValueChange={() => toggleOperator(displayOperator.value)}
+                                        thumbColor={localSettings.availableOperators.includes(displayOperator.value) ? Colors.button.background : '#ccc'}
+                                        trackColor={{ false: '#ddd', true: '#b9c4f7' }}
+                                    />
+                                </ThemedView>
+                            ))}
+                        </ThemedView>
                     </ThemedView>
                     <ThemedView style={styles.startButtonContainer}>
                         <GeneralButton title="Start Mad Minute" onPress={startMadMinute} />
@@ -111,24 +129,53 @@ export default function CreateMadMinute() {
 const styles = StyleSheet.create({
     sliderContainer: {
         flex: 2,
-        justifyContent: 'flex-end'
+        justifyContent: 'flex-end',
+        paddingHorizontal: 16
     },
 
     buttonsContainer: {
-        flex: 2,
-        alignItems: 'center',
+        flex: 3,
         justifyContent: 'flex-start',
-        gap: 10
+        paddingHorizontal: 16,
+        marginTop: 16,
+    },
+
+    card: {
+        width: '100%',
+        borderRadius: 20,
+        borderWidth: 1,
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+        shadowColor: '#1c2a6b',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.08,
+        shadowRadius: 10,
+        elevation: 2,
+    },
+
+    cardTitle: {
+        fontSize: 13,
+        fontWeight: '700',
+        letterSpacing: 0.8,
+        textTransform: 'uppercase',
+        marginBottom: 4,
     },
 
     buttonContainer: {
-        flexDirection: 'row'
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingVertical: 4,
+    },
+
+    operatorLabel: {
+        fontSize: 18,
     },
 
     startButtonContainer: {
-        flex: 1,
         alignItems: 'center',
         justifyContent: 'flex-start',
-        marginTop: 10
+        paddingHorizontal: 16,
+        marginBottom: 16
     }
 })

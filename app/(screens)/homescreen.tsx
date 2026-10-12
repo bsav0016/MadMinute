@@ -5,9 +5,14 @@ import { Routes } from "@/app/(screens)/Routes";
 import { ThemedView } from "@/components/ThemedView";
 import { ThemedText } from "@/components/ThemedText";
 import { GeneralButton } from "@/components/GeneralButton";
+import { useThemeColor } from "@/hooks/useThemeColor";
 
 export default function HomeScreen() {
   const { routeTo } = useRouteTo();
+  const surface = useThemeColor({}, 'surface');
+  const border = useThemeColor({}, 'border');
+  const muted = useThemeColor({}, 'muted');
+  const tint = useThemeColor({}, 'tint');
 
   const homeButtons = [
     { title: "Start", route: Routes.CreateMadMinute },
@@ -19,12 +24,20 @@ export default function HomeScreen() {
         <ThemedText type='title'>
           Mad Minute
         </ThemedText>
+        <ThemedText style={[styles.tagline, { color: muted }]}>
+          How many can you solve in 60 seconds?
+        </ThemedText>
       </ThemedView>
+
+      <ThemedView style={[styles.sampleCard, { backgroundColor: surface, borderColor: border }]}>
+        <ThemedText style={[styles.sampleText, { color: tint }]}>7 × 8 = ?</ThemedText>
+      </ThemedView>
+
       <ThemedView style={styles.homeButtonView}>
         {homeButtons.map((homeButton) => (
-          <GeneralButton 
+          <GeneralButton
             key={homeButton.title}
-            title={homeButton.title} 
+            title={homeButton.title}
             onPress={() => routeTo(homeButton.route)}
             autoWidth={false}
           />
@@ -43,11 +56,36 @@ const styles = StyleSheet.create({
   },
 
   titleContainer: {
+    alignItems: 'center',
     justifyContent: 'center',
+    gap: 8,
+  },
+
+  tagline: {
+    fontSize: 17,
+    textAlign: 'center',
+  },
+
+  sampleCard: {
+    paddingVertical: 28,
+    paddingHorizontal: 40,
+    borderRadius: 24,
+    borderWidth: 1,
+    shadowColor: '#1c2a6b',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.12,
+    shadowRadius: 14,
+    elevation: 4,
+  },
+
+  sampleText: {
+    fontSize: 48,
+    lineHeight: 56,
+    fontWeight: '800',
   },
 
   homeButtonView: {
-    width: '50%',
+    width: '70%',
     alignItems: 'center',
     gap: 10,
   },
