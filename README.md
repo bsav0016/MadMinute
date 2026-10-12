@@ -2,7 +2,7 @@
 
 Mobile app for the classic "mad minute" arithmetic drill: answer as many math problems as you can in 60 seconds, then see how you did. You choose which operations to practise and the range of numbers.
 
-<!-- TODO: add screenshots (settings, a question, results) -->
+<p><img src="docs/screenshots/settings.png" alt="Settings screen" width="260"> <img src="docs/screenshots/question.png" alt="A question in progress" width="260"></p>
 
 ## Why it exists
 
