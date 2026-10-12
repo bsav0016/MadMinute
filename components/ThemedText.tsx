@@ -45,21 +45,21 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   title: {
-    fontSize: 36,
-    fontWeight: 'bold',
-    lineHeight: 36,
+    fontSize: 40,
+    fontWeight: '800',
+    lineHeight: 46,
   },
   subtitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
+    fontSize: 26,
+    fontWeight: '700',
   },
   link: {
     lineHeight: 30,
     fontSize: 16,
-    color: '#0a7ea4',
+    color: '#4263eb',
   },
   countdown: {
-    fontSize: 96,
-    fontWeight: 'bold'
+    fontSize: 120,
+    fontWeight: '800'
   }
 });

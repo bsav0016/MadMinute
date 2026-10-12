@@ -8,10 +8,14 @@ import { useRouteTo } from "@/contexts/RouteContext";
 import React from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { Routes } from "./Routes";
+import { useThemeColor } from "@/hooks/useThemeColor";
 
 export default function Results() {
     const { madMinute } = useMadMinute();
     const { routeReplace } = useRouteTo();
+    const surface = useThemeColor({}, 'surface');
+    const border = useThemeColor({}, 'border');
+    const muted = useThemeColor({}, 'muted');
 
     interface ResponseResults {
         correct: number;
@@ -52,9 +56,11 @@ export default function Results() {
     }
 
     const QuestionResult = ({question, answer, response, header=false}: QuestionResultProps) => {
+        const themedText = useThemeColor({}, 'text');
+        const pageBackground = useThemeColor({}, 'background');
         let backgroundColor;
         if (header) {
-            backgroundColor = 'none'
+            backgroundColor = pageBackground
         }
         else if (!response) {
             backgroundColor = Colors.results.skipped
@@ -66,18 +72,20 @@ export default function Results() {
             backgroundColor = Colors.results.incorrect
         }
 
+        const textColor = header ? themedText : '#111827';
+
         return (
-            <ThemedView style={[styles.resultContainer, {backgroundColor: backgroundColor}]}>
+            <ThemedView style={[styles.resultContainer, header && styles.headerRow, {backgroundColor: backgroundColor}]}>
                 <View style={styles.questionLabelContainer}>
-                    <Text style={styles.resultsText}>{question}</Text>
+                    <Text style={[styles.resultsText, header && styles.headerText, { color: textColor }]}>{question}</Text>
                 </View>
 
                 <View style={styles.answerLabelContainer}>
-                    <Text style={styles.resultsText}>{answer}</Text>
+                    <Text style={[styles.resultsText, header && styles.headerText, { color: textColor }]}>{answer}</Text>
                 </View>
 
                 <View style={styles.responseLabelContainer}>
-                    <Text style={styles.resultsText}>{response}</Text>
+                    <Text style={[styles.resultsText, header && styles.headerText, { color: textColor }]}>{response}</Text>
                 </View>
             </ThemedView>
         )
@@ -85,11 +93,11 @@ export default function Results() {
 
     return(
         <CustomHeaderView header="Results">
-            <ThemedView style={styles.summaryContainer}>
-                <ThemedText type="subtitle">Overall Score: {correct}/{correct + incorrect + skipped}</ThemedText>
+            <ThemedView style={[styles.summaryContainer, { backgroundColor: surface, borderColor: border }]}>
+                <ThemedText type="subtitle" style={styles.scoreText}>Overall Score: {correct}/{correct + incorrect + skipped}</ThemedText>
 
                 {displayFields.map((field) => (
-                    <ThemedText type="default" key={field.text}>{field.text}: {field.value}</ThemedText>
+                    <ThemedText type="default" key={field.text} style={{ color: muted }}>{field.text}: {field.value}</ThemedText>
                 ))}
 
             </ThemedView>
@@ -120,16 +128,36 @@ export default function Results() {
 
 const styles = StyleSheet.create({
     summaryContainer: {
-        marginVertical: 10,
+        marginVertical: 12,
+        marginHorizontal: 16,
+        paddingVertical: 16,
         gap: 2,
-        alignItems: 'center'
+        alignItems: 'center',
+        borderRadius: 20,
+        borderWidth: 1,
+    },
+
+    scoreText: {
+        fontSize: 28,
+        marginBottom: 4,
     },
 
     resultContainer: {
         flexDirection: 'row',
-        margin: 5,
+        marginVertical: 3,
+        marginHorizontal: 16,
         paddingHorizontal: 10,
-        paddingVertical: 5
+        paddingVertical: 10,
+        borderRadius: 12,
+    },
+
+    headerRow: {
+        paddingVertical: 4,
+    },
+
+    headerText: {
+        fontSize: 15,
+        opacity: 0.7,
     },
 
     questionLabelContainer: {

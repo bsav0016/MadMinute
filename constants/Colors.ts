@@ -1,23 +1,28 @@
 /**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
+ * Colors used in the app, defined for light and dark mode.
  */
 
-const tintColorLight = '#0a7ea4';
-const tintColorDark = '#fff';
+const tintColorLight = '#4263eb';
+const tintColorDark = '#748ffc';
 
 export const Colors = {
   light: {
-    text: '#11181C',
-    background: '#f9f9f9',
+    text: '#111827',
+    background: '#f5f7fb',
+    surface: '#ffffff',
+    border: '#e3e7ef',
+    muted: '#6b7280',
     tint: tintColorLight,
     icon: '#687076',
     tabIconDefault: '#687076',
     tabIconSelected: tintColorLight,
   },
   dark: {
-    text: '#ECEDEE',
-    background: '#151718',
+    text: '#f3f4f6',
+    background: '#0f1115',
+    surface: '#1a1d24',
+    border: '#2a2f3a',
+    muted: '#9ca3af',
     tint: tintColorDark,
     icon: '#9BA1A6',
     tabIconDefault: '#9BA1A6',
@@ -25,11 +30,12 @@ export const Colors = {
   },
   button: {
     text: 'white',
-    background: '#007bff'
+    background: '#4263eb',
+    disabled: '#c5cad6',
   },
   results: {
-    correct: '#59bd5a',
-    incorrect: '#ed7474',
-    skipped: '#e6d89e'
+    correct: '#8fd694',
+    incorrect: '#f2a1a1',
+    skipped: '#efe3a8'
   }
 };
