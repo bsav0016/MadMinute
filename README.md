@@ -1,50 +1,44 @@
-# Welcome to your Expo app 👋
+# Math Mad Minute
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Mobile app for the classic "mad minute" arithmetic drill: answer as many math problems as you can in 60 seconds, then see how you did. You choose which operations to practise and the range of numbers.
 
-## Get started
+<!-- TODO: add screenshots (settings, a question, results) -->
 
-1. Install dependencies
+## Why it exists
 
-   ```bash
-   npm install
-   ```
+<!-- TODO: in your own words, why you built it (a child's practice? a classroom? learning Expo?) -->
 
-2. Start the app
+## How it works
 
-   ```bash
-    npx expo start
-   ```
+1. **Settings** – turn addition, subtraction, multiplication and division on or off, and set the smallest and largest numbers with a two-handle slider (defaults: addition only, 0 to 20).
+2. **Play** – a 3-second countdown, then 60 seconds. Questions are generated from your settings; type an answer and submit to get the next one.
+3. **Results** – correct, incorrect and skipped counts, an overall score such as `18/22`, and a review of each question.
 
-In the output, you'll find options to open the app in a
+## Stack
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+- React Native 0.76 / Expo SDK 52, TypeScript, Expo Router
+- React context for the game state (`contexts/MadMinuteContext`)
+- `react-native-google-mobile-ads` and `expo-tracking-transparency` for an ad banner (set up, but not wired into the screens yet)
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## Running it
 
 ```bash
-npm run reset-project
+npm install
+npm start            # expo start
+npm run android      # or npm run ios / npm run web
+npm test             # jest --watchAll
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+The ad dependencies need a native build (`npm run android` / `npm run ios`) rather than Expo Go. `app.json` still contains a placeholder Android AdMob app ID; replace it with your own before building for Android.
 
-## Learn more
+## Design decisions
 
-To learn more about developing your project with Expo, look at the following resources:
+- **Timer based on elapsed time**, not on counting ticks, so the 60 seconds stay accurate if the app is briefly delayed.
+- **Questions and settings as small classes** (`MadMinuteQuestion`, `MadMinuteSettings`, `MadMinuteOperator`) kept in a context, so the settings, play and results screens share one source of truth.
+- **No backend or account**: everything runs on the device.
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## Limitations
 
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- Only a template snapshot test exists; the question generation and scoring are untested.
+- The banner ad provider (`contexts/BannerAdContext.tsx`) is not used by any screen yet.
+- <!-- TODO: release status (is it on the App Store / Google Play?) and what you want to say about ads -->
