@@ -6,7 +6,7 @@ Mobile app for the classic "mad minute" arithmetic drill: answer as many math pr
 
 ## Why it exists
 
-<!-- TODO: in your own words, why you built it (a child's practice? a classroom? learning Expo?) -->
+A timed arithmetic drill is slow to set up by hand: someone has to write the questions, time the minute and mark the answers. This app generates questions from the operations and number range you choose, runs the 60-second timer, and shows a review of every question afterwards.
 
 ## How it works
 
@@ -41,7 +41,6 @@ The ad dependencies need a native build (`npm run android` / `npm run ios`) rath
 
 - Only a template snapshot test exists; the question generation and scoring are untested.
 - The banner ad provider (`contexts/BannerAdContext.tsx`) is not used by any screen yet.
-- <!-- TODO: release status (is it on the App Store / Google Play?) and what you want to say about ads -->
 
 ## License
 
