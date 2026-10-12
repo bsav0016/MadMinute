@@ -42,3 +42,7 @@ The ad dependencies need a native build (`npm run android` / `npm run ios`) rath
 - Only a template snapshot test exists; the question generation and scoring are untested.
 - The banner ad provider (`contexts/BannerAdContext.tsx`) is not used by any screen yet.
 - <!-- TODO: release status (is it on the App Store / Google Play?) and what you want to say about ads -->
+
+## License
+
+MIT. See [LICENSE](LICENSE).
