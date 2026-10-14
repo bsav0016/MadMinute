@@ -27,7 +27,12 @@ npm install
 npm start            # expo start
 npm run android      # or npm run ios / npm run web
 npm test             # jest --watchAll
+npm run test:ci      # jest --ci (single run)
+npm run typecheck    # tsc --noEmit
+npm run lint         # expo lint
 ```
+
+`.github/workflows/ci.yml` runs the type check, lint, tests and a JavaScript bundle on every pull request. Store builds stay manual.
 
 The ad dependencies need a native build (`npm run android` / `npm run ios`) rather than Expo Go. `app.json` still contains a placeholder Android AdMob app ID; replace it with your own before building for Android.
 
@@ -39,7 +44,7 @@ The ad dependencies need a native build (`npm run android` / `npm run ios`) rath
 
 ## Limitations
 
-- Only a template snapshot test exists; the question generation and scoring are untested.
+- Tests cover question generation (operators, ranges, subtraction and division edge cases). The screens and scoring are not tested yet.
 - The banner ad provider (`contexts/BannerAdContext.tsx`) is not used by any screen yet.
 
 ## License
