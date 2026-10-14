@@ -29,7 +29,7 @@ export default function PlayMadMinute() {
     const timeRemainingRef = useRef(timeRemaining);
     
     useEffect(() => {
-        let timeoutId: NodeJS.Timeout;
+        let frameId = 0;
 
         const tick = () => {
             const now = performance.now();
@@ -42,15 +42,15 @@ export default function PlayMadMinute() {
             if (newTimeRemaining <= 0) {
                 routeTo(Routes.Results);
             } else {
-                requestAnimationFrame(tick);
+                frameId = requestAnimationFrame(tick);
             }
         };
 
         startTimeRef.current = performance.now();
-        requestAnimationFrame(tick);
+        frameId = requestAnimationFrame(tick);
 
         return () => {
-            clearTimeout(timeoutId);
+            cancelAnimationFrame(frameId);
         };
     }, [routeTo]);
 
