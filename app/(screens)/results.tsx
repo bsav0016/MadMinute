@@ -4,6 +4,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Colors } from "@/constants/Colors";
 import { useMadMinute } from "@/contexts/MadMinuteContext/MadMinuteContext";
+import { getResponseResults } from "@/contexts/MadMinuteContext/responseResults";
 import { useRouteTo } from "@/contexts/RouteContext";
 import React from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
@@ -17,31 +18,7 @@ export default function Results() {
     const border = useThemeColor({}, 'border');
     const muted = useThemeColor({}, 'muted');
 
-    interface ResponseResults {
-        correct: number;
-        incorrect: number;
-        skipped: number;
-    }
-    const {correct, incorrect, skipped}: ResponseResults = getResponseResults()
-
-    function getResponseResults(): ResponseResults {
-        let correct = 0;
-        let incorrect = 0;
-        let skipped = 0;
-
-        for (let i = 0; i < madMinute.questions.length - 1; i++) {
-            const question = madMinute.questions[i];
-            if (!question.response) {
-                skipped += 1;
-            } else if (String(question.answer) === question.response) {
-                correct += 1;
-            } else {
-                incorrect += 1;
-            }
-        }
-
-        return {correct, incorrect, skipped}
-    }
+    const {correct, incorrect, skipped} = getResponseResults(madMinute.questions)
 
     const displayFields = [
         { text: 'Incorrect', value: incorrect },
