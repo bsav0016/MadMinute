@@ -44,7 +44,7 @@ The ad dependencies need a native build (`npm run android` / `npm run ios`) rath
 
 ## Limitations
 
-- Tests cover question generation (operators, ranges, subtraction and division edge cases). The screens and scoring are not tested yet.
+- Tests cover question generation (operators, ranges, subtraction and division edge cases) and the results tally (correct, incorrect and skipped, and why the unanswered last question is not counted). The screens and the timer are not tested.
 - The banner ad provider (`contexts/BannerAdContext.tsx`) is not used by any screen yet.
 
 ## License
