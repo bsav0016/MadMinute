@@ -5,6 +5,7 @@ import { ThemedView } from "@/components/ThemedView";
 import { Colors } from "@/constants/Colors";
 import { useMadMinute } from "@/contexts/MadMinuteContext/MadMinuteContext";
 import { getResponseResults } from "@/contexts/MadMinuteContext/responseResults";
+import { displayOperator } from "@/contexts/MadMinuteContext/MadMinuteOperator";
 import { useRouteTo } from "@/contexts/RouteContext";
 import React from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
@@ -12,7 +13,7 @@ import { Routes } from "./Routes";
 import { useThemeColor } from "@/hooks/useThemeColor";
 
 export default function Results() {
-    const { madMinute } = useMadMinute();
+    const { madMinute, resetMadMinute } = useMadMinute();
     const { routeReplace } = useRouteTo();
     const surface = useThemeColor({}, 'surface');
     const border = useThemeColor({}, 'border');
@@ -20,10 +21,19 @@ export default function Results() {
 
     const {correct, incorrect, skipped} = getResponseResults(madMinute.questions)
 
+    const attempted = correct + incorrect + skipped;
+    const accuracy = attempted === 0 ? 0 : Math.round((correct / attempted) * 100);
+
     const displayFields = [
+        { text: 'Accuracy', value: `${accuracy}%` },
         { text: 'Incorrect', value: incorrect },
         { text: 'Skipped', value: skipped },
     ]
+
+    const playAgain = () => {
+        resetMadMinute();
+        routeReplace(Routes.PlayMadMinute);
+    }
 
     interface QuestionResultProps {
         question: string;
@@ -71,7 +81,7 @@ export default function Results() {
     return(
         <CustomHeaderView header="Results">
             <ThemedView style={[styles.summaryContainer, { backgroundColor: surface, borderColor: border }]}>
-                <ThemedText type="subtitle" style={styles.scoreText}>Overall Score: {correct}/{correct + incorrect + skipped}</ThemedText>
+                <ThemedText type="subtitle" style={styles.scoreText}>Overall Score: {correct}/{attempted}</ThemedText>
 
                 {displayFields.map((field) => (
                     <ThemedText type="default" key={field.text} style={{ color: muted }}>{field.text}: {field.value}</ThemedText>
@@ -88,7 +98,7 @@ export default function Results() {
             <ScrollView style={styles.resultsContainer}> 
                 {madMinute.questions.slice(0, -1).map((question) => (
                     <QuestionResult 
-                        question={`${question.value1}${question.operator}${question.value2}`}
+                        question={`${question.value1} ${displayOperator(question.operator)} ${question.value2}`}
                         answer={String(question.answer)}
                         response={question.response ?? ''} 
                         key={question.id} 
@@ -97,7 +107,8 @@ export default function Results() {
             </ScrollView>
 
             <ThemedView style={styles.returnHomeContainer}>
-                <GeneralButton title="Return Home" onPress={() => routeReplace(Routes.HomeScreen)} />
+                <GeneralButton title="Play Again" onPress={playAgain} />
+                <GeneralButton title="Return Home" onPress={() => routeReplace(Routes.HomeScreen)} variant="secondary" />
             </ThemedView>
         </CustomHeaderView>
     )
@@ -165,6 +176,7 @@ const styles = StyleSheet.create({
 
     returnHomeContainer: {
         alignItems: 'center',
-        marginVertical: 10
+        marginVertical: 10,
+        gap: 4
     }
 })

@@ -1,6 +1,7 @@
 import React from "react";
 import { ThemedView } from "./ThemedView";
 import { MadMinuteQuestion } from "@/contexts/MadMinuteContext/MadMinuteQuestion";
+import { displayOperator } from "@/contexts/MadMinuteContext/MadMinuteOperator";
 import { StyleSheet } from "react-native";
 import { ThemedText } from "./ThemedText";
 import { useThemeColor } from "@/hooks/useThemeColor";
@@ -19,7 +20,7 @@ export function FormattedQuestion({question}: FormattedQuestionProps) {
             </ThemedView>
             <ThemedView style={styles.line2Container}>
                 <ThemedView style={styles.operatorContainer}>
-                    <ThemedText type="subtitle" style={styles.operatorText}>{question.operator}</ThemedText>
+                    <ThemedText type="subtitle" style={styles.operatorText}>{displayOperator(question.operator)}</ThemedText>
                 </ThemedView>
                 <ThemedView style={styles.value2Container}>
                     <ThemedText type="subtitle" style={styles.valueText}>{question.value2}</ThemedText>
