@@ -36,6 +36,7 @@ export const Colors = {
   results: {
     correct: '#8fd694',
     incorrect: '#f2a1a1',
-    skipped: '#efe3a8'
+    skipped: '#efe3a8',
+    incorrectStrong: '#e03131'
   }
 };

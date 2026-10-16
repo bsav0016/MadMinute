@@ -3,13 +3,15 @@ import { ThemedView } from "@/components/ThemedView";
 import { useMadMinute } from "@/contexts/MadMinuteContext/MadMinuteContext";
 import { useRouteTo } from "@/contexts/RouteContext";
 import React, { useEffect, useRef, useState } from "react";
-import { KeyboardAvoidingView, Platform, StyleSheet, TextInput } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { Routes } from "./Routes";
 import { ThemedText } from "@/components/ThemedText";
 import { GeneralButton } from "@/components/GeneralButton";
 import { FormattedQuestion } from "@/components/FormattedQuestion";
 import { MadMinuteQuestion } from "@/contexts/MadMinuteContext/MadMinuteQuestion";
 import { useThemeColor } from "@/hooks/useThemeColor";
+import { NumberPad } from "@/components/NumberPad";
+import { Colors } from "@/constants/Colors";
 
 export default function PlayMadMinute() {
     const { madMinute, addQuestion, submitResponse } = useMadMinute();
@@ -20,6 +22,9 @@ export default function PlayMadMinute() {
     const tint = useThemeColor({}, 'tint');
 
     const startTimeRemaining: number = 63
+    const roundSeconds = 60
+    const maxAnswerLength = 6
+    const lowTimeSeconds = 10
 
     const [timeRemaining, setTimeRemaining] = useState<number>(startTimeRemaining);
     const [currentQuestion, setCurrentQuestion] = useState<MadMinuteQuestion | undefined>(undefined);
@@ -62,14 +67,21 @@ export default function PlayMadMinute() {
         }
     }, [madMinute.questions.length])
 
-    const submitQuestion = () => {
+    const submitQuestion = (answer: string) => {
         if (currentQuestion) {
-            submitResponse(response, currentQuestion.id);
+            submitResponse(answer, currentQuestion.id);
             setResponse('');
         } else {
             addQuestion();
         }
     }
+
+    const addDigit = (digit: string) => {
+        setResponse((current) => current.length >= maxAnswerLength ? current : current + digit);
+    }
+
+    const lowOnTime = timeRemaining <= lowTimeSeconds;
+    const timerColor = lowOnTime ? Colors.results.incorrectStrong : tint;
 
     return (
         <>
@@ -78,41 +90,41 @@ export default function PlayMadMinute() {
                 <ThemedText type="countdown">{timeRemaining - 60}</ThemedText>
             </ThemedView>
             :
-            <KeyboardAvoidingView
-                style={styles.screenView}
-                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
-            >
+            <View style={styles.screenView}>
                 <CustomHeaderView header="Mad Minute" canGoBack={true}>
                     <ThemedView style={styles.timeRemainingContainer}>
                         <ThemedView style={[styles.timePill, { backgroundColor: surface, borderColor: border }]}>
-                            <ThemedText style={[styles.timeText, { backgroundColor: 'transparent' }]}>Time: {timeRemaining}</ThemedText>
+                            <ThemedText style={[styles.timeText, { backgroundColor: 'transparent', color: lowOnTime ? timerColor : color }]}>Time: {timeRemaining}</ThemedText>
                         </ThemedView>
+                        <View style={[styles.timeTrack, { backgroundColor: border }]}>
+                            <View style={[styles.timeFill, { backgroundColor: timerColor, width: `${Math.min(timeRemaining / roundSeconds, 1) * 100}%` }]} />
+                        </View>
                     </ThemedView>
                     { currentQuestion &&
                         <ThemedView style={styles.questionContainer}>
                             <ThemedView style={[styles.questionCard, { backgroundColor: surface, borderColor: border }]}>
                                 <FormattedQuestion question={currentQuestion} />
                             </ThemedView>
-                            <TextInput
-                                style={[styles.input, { color: color, borderColor: tint, backgroundColor: surface }]}
-                                onChangeText={setResponse}
-                                value={response}
-                                keyboardType="numeric"
-                                autoFocus={true}
-                            />
+                            <View style={[styles.input, { borderColor: tint, backgroundColor: surface }]}>
+                                <Text style={[styles.inputText, { color: color }]}>{response}</Text>
+                            </View>
                         </ThemedView>
                     }
                     <ThemedView style={styles.buttonsContainer}>
                         <ThemedView style={styles.buttonContainer}>
-                            <GeneralButton title="Skip" onPress={submitQuestion} variant="secondary" />
+                            <GeneralButton title="Skip" onPress={() => submitQuestion('')} variant="secondary" />
                         </ThemedView>
                         <ThemedView style={styles.buttonContainer}>
-                            <GeneralButton title="Next" onPress={submitQuestion} />
+                            <GeneralButton title="Next" onPress={() => submitQuestion(response)} disabled={response === ''} />
                         </ThemedView>
                     </ThemedView>
+                    <NumberPad
+                        onDigit={addDigit}
+                        onBackspace={() => setResponse((current) => current.slice(0, -1))}
+                        onClear={() => setResponse('')}
+                    />
                 </CustomHeaderView>
-            </KeyboardAvoidingView>
+            </View>
             }
         </>
     )
@@ -130,8 +142,22 @@ const styles = StyleSheet.create({
     },
 
     timeRemainingContainer: {
-        marginVertical: 16,
-        alignItems: 'center'
+        marginTop: 8,
+        marginBottom: 4,
+        alignItems: 'center',
+        gap: 10,
+    },
+
+    timeTrack: {
+        width: '80%',
+        height: 6,
+        borderRadius: 3,
+        overflow: 'hidden',
+    },
+
+    timeFill: {
+        height: '100%',
+        borderRadius: 3,
     },
 
     timePill: {
@@ -172,14 +198,19 @@ const styles = StyleSheet.create({
         height: 58,
         borderWidth: 2,
         borderRadius: 16,
-        textAlign: 'center'
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+
+    inputText: {
+        fontSize: 32,
     },
 
     buttonsContainer: {
-        flex: 1,
         flexDirection: 'row',
         width: '100%',
         paddingHorizontal: 12,
+        paddingBottom: 8,
         gap: 8,
     },
 
