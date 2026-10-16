@@ -1,6 +1,6 @@
 import { CustomHeaderView } from "@/components/CustomHeaderView";
 import React, { useState, useEffect } from "react";
-import { Keyboard, KeyboardAvoidingView, Platform, StyleSheet, TouchableWithoutFeedback, Switch } from "react-native";
+import { ScrollView, StyleSheet, Switch, Text, TouchableOpacity } from "react-native";
 import { MinMaxSlider } from "@/components/MinMaxSlider";
 import { useMadMinute } from "@/contexts/MadMinuteContext/MadMinuteContext";
 import { MadMinuteSettings } from "@/contexts/MadMinuteContext/MadMinuteSettings";
@@ -13,11 +13,13 @@ import { Routes } from "./Routes";
 import { useToast } from "@/contexts/ToastContext";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { Colors } from "@/constants/Colors";
+import { DURATION_OPTIONS_SECONDS, matchesPreset, Preset, PRESETS } from "@/contexts/MadMinuteContext/presets";
 
 export default function CreateMadMinute() {
     const surface = useThemeColor({}, 'surface');
     const border = useThemeColor({}, 'border');
     const muted = useThemeColor({}, 'muted');
+    const text = useThemeColor({}, 'text');
     const { madMinute, updateSettings, resetMadMinute } = useMadMinute();
     const { routeTo } = useRouteTo();
     const { addToast } = useToast();
@@ -33,13 +35,15 @@ export default function CreateMadMinute() {
             newLocalSettings = new MadMinuteSettings(
                 value,
                 localSettings.maxValue,
-                localSettings.availableOperators
+                localSettings.availableOperators,
+                localSettings.durationSeconds
             );
         } else {
             newLocalSettings = new MadMinuteSettings(
                 localSettings.minValue,
                 value,
-                localSettings.availableOperators
+                localSettings.availableOperators,
+                localSettings.durationSeconds
             );
         }
         setLocalSettings(newLocalSettings);
@@ -60,6 +64,39 @@ export default function CreateMadMinute() {
         }
     }
 
+    const applyPreset = (preset: Preset) => {
+        setLocalSettings(new MadMinuteSettings(
+            preset.minValue,
+            preset.maxValue,
+            preset.availableOperators,
+            localSettings.durationSeconds
+        ));
+    }
+
+    const setDuration = (durationSeconds: number) => {
+        setLocalSettings(new MadMinuteSettings(
+            localSettings.minValue,
+            localSettings.maxValue,
+            localSettings.availableOperators,
+            durationSeconds
+        ));
+    }
+
+    const Chip = ({ label, selected, onPress }: { label: string; selected: boolean; onPress: () => void }) => (
+        <TouchableOpacity
+            style={[
+                styles.chip,
+                selected
+                    ? { backgroundColor: Colors.button.background, borderColor: Colors.button.background }
+                    : { backgroundColor: surface, borderColor: border },
+            ]}
+            onPress={onPress}
+            activeOpacity={0.7}
+        >
+            <Text style={[styles.chipText, { color: selected ? Colors.button.text : text }]}>{label}</Text>
+        </TouchableOpacity>
+    );
+
     const startMadMinute = () => {
         if (localSettings.availableOperators.length === 0) {
             addToast('At least one operator must be selected!')
@@ -77,67 +114,100 @@ export default function CreateMadMinute() {
     ]
 
     return (
-        <CustomHeaderView header={"Mad Minute Settings"} canGoBack={true}>
-            <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
-                <>
-                    <KeyboardAvoidingView
-                        style={styles.sliderContainer}
-                        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
-                    >
-                        <ThemedView style={[styles.card, { backgroundColor: surface, borderColor: border }]}>
-                            <ThemedText style={[styles.cardTitle, { color: muted }]}>Number range</ThemedText>
-                            <MinMaxSlider
-                                min={localSettings.minValue}
-                                max={localSettings.maxValue}
-                                setMinMax={setMinMax}
+        <CustomHeaderView header={"Settings"} canGoBack={true}>
+            <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
+                <ThemedView style={[styles.card, { backgroundColor: surface, borderColor: border }]}>
+                    <ThemedText style={[styles.cardTitle, { color: muted }]}>Quick start</ThemedText>
+                    <ThemedView style={styles.chipRow}>
+                        {PRESETS.map((preset) => (
+                            <Chip
+                                key={preset.label}
+                                label={preset.label}
+                                selected={matchesPreset(preset, localSettings)}
+                                onPress={() => applyPreset(preset)}
+                            />
+                        ))}
+                    </ThemedView>
+                </ThemedView>
+                <ThemedView style={[styles.card, { backgroundColor: surface, borderColor: border }]}>
+                    <ThemedText style={[styles.cardTitle, { color: muted }]}>Number range</ThemedText>
+                    <MinMaxSlider
+                        min={localSettings.minValue}
+                        max={localSettings.maxValue}
+                        setMinMax={setMinMax}
+                    />
+                </ThemedView>
+                <ThemedView style={[styles.card, { backgroundColor: surface, borderColor: border }]}>
+                    <ThemedText style={[styles.cardTitle, { color: muted }]}>Operations</ThemedText>
+                    { displayOperators.map((displayOperator, index) => (
+                        <ThemedView
+                            style={[
+                                styles.buttonContainer,
+                                { backgroundColor: surface },
+                                index > 0 && { borderTopWidth: 1, borderTopColor: border },
+                            ]}
+                            key={displayOperator.value}
+                        >
+                            <ThemedText style={[styles.operatorLabel, { backgroundColor: 'transparent' }]}>{displayOperator.text}</ThemedText>
+                            <Switch
+                                value={localSettings.availableOperators.includes(displayOperator.value)}
+                                onValueChange={() => toggleOperator(displayOperator.value)}
+                                thumbColor={localSettings.availableOperators.includes(displayOperator.value) ? Colors.button.background : '#ccc'}
+                                trackColor={{ false: '#ddd', true: '#b9c4f7' }}
                             />
                         </ThemedView>
-                    </KeyboardAvoidingView>
-                    <ThemedView style={styles.buttonsContainer}>
-                        <ThemedView style={[styles.card, { backgroundColor: surface, borderColor: border }]}>
-                            <ThemedText style={[styles.cardTitle, { color: muted }]}>Operations</ThemedText>
-                            { displayOperators.map((displayOperator, index) => (
-                                <ThemedView
-                                    style={[
-                                        styles.buttonContainer,
-                                        { backgroundColor: surface },
-                                        index > 0 && { borderTopWidth: 1, borderTopColor: border },
-                                    ]}
-                                    key={displayOperator.value}
-                                >
-                                    <ThemedText style={[styles.operatorLabel, { backgroundColor: 'transparent' }]}>{displayOperator.text}</ThemedText>
-                                    <Switch
-                                        value={localSettings.availableOperators.includes(displayOperator.value)}
-                                        onValueChange={() => toggleOperator(displayOperator.value)}
-                                        thumbColor={localSettings.availableOperators.includes(displayOperator.value) ? Colors.button.background : '#ccc'}
-                                        trackColor={{ false: '#ddd', true: '#b9c4f7' }}
-                                    />
-                                </ThemedView>
-                            ))}
-                        </ThemedView>
+                    ))}
+                </ThemedView>
+                <ThemedView style={[styles.card, { backgroundColor: surface, borderColor: border }]}>
+                    <ThemedText style={[styles.cardTitle, { color: muted }]}>Round length</ThemedText>
+                    <ThemedView style={styles.chipRow}>
+                        {DURATION_OPTIONS_SECONDS.map((seconds) => (
+                            <Chip
+                                key={seconds}
+                                label={`${seconds} sec`}
+                                selected={localSettings.durationSeconds === seconds}
+                                onPress={() => setDuration(seconds)}
+                            />
+                        ))}
                     </ThemedView>
-                    <ThemedView style={styles.startButtonContainer}>
-                        <GeneralButton title="Start Mad Minute" onPress={startMadMinute} />
-                    </ThemedView>
-                </>
-            </TouchableWithoutFeedback>
+                </ThemedView>
+            </ScrollView>
+            <ThemedView style={styles.startButtonContainer}>
+                <GeneralButton title="Start Mad Minute" onPress={startMadMinute} />
+            </ThemedView>
         </CustomHeaderView>
     )
 }
 
 const styles = StyleSheet.create({
-    sliderContainer: {
-        flex: 2,
-        justifyContent: 'flex-end',
-        paddingHorizontal: 16
+    scroll: {
+        flex: 1,
     },
 
-    buttonsContainer: {
-        flex: 3,
-        justifyContent: 'flex-start',
+    scrollContent: {
         paddingHorizontal: 16,
-        marginTop: 16,
+        paddingVertical: 8,
+        gap: 14,
+    },
+
+    chipRow: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 8,
+        backgroundColor: 'transparent',
+        paddingTop: 4,
+    },
+
+    chip: {
+        paddingVertical: 8,
+        paddingHorizontal: 14,
+        borderRadius: 18,
+        borderWidth: 1.5,
+    },
+
+    chipText: {
+        fontSize: 15,
+        fontWeight: '600',
     },
 
     card: {

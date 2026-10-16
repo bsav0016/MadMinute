@@ -21,8 +21,9 @@ export default function PlayMadMinute() {
     const border = useThemeColor({}, 'border');
     const tint = useThemeColor({}, 'tint');
 
-    const startTimeRemaining: number = 63
-    const roundSeconds = 60
+    const countdownSeconds = 3
+    const roundSeconds = madMinute.settings.durationSeconds
+    const startTimeRemaining: number = roundSeconds + countdownSeconds
     const maxAnswerLength = 6
     const lowTimeSeconds = 10
 
@@ -85,9 +86,9 @@ export default function PlayMadMinute() {
 
     return (
         <>
-            {timeRemaining > 60 ?
+            {timeRemaining > roundSeconds ?
             <ThemedView style={styles.countdownContainer}>
-                <ThemedText type="countdown">{timeRemaining - 60}</ThemedText>
+                <ThemedText type="countdown">{timeRemaining - roundSeconds}</ThemedText>
             </ThemedView>
             :
             <View style={styles.screenView}>

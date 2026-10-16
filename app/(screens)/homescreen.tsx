@@ -25,7 +25,7 @@ export default function HomeScreen() {
           Mad Minute
         </ThemedText>
         <ThemedText style={[styles.tagline, { color: muted }]}>
-          How many can you solve in 60 seconds?
+          How many can you solve before time runs out?
         </ThemedText>
       </ThemedView>
 
