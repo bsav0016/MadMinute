@@ -1,11 +1,13 @@
 import React from "react";
-import { StyleSheet } from "react-native";
+import { Linking, StyleSheet, TouchableOpacity } from "react-native";
 import { useRouteTo } from "@/contexts/RouteContext";
 import { Routes } from "@/app/(screens)/Routes";
 import { ThemedView } from "@/components/ThemedView";
 import { ThemedText } from "@/components/ThemedText";
 import { GeneralButton } from "@/components/GeneralButton";
 import { useThemeColor } from "@/hooks/useThemeColor";
+
+const PRIVACY_POLICY_URL = "https://frameonapp.weebly.com/math-mad-minute-privacy-policy.html";
 
 export default function HomeScreen() {
   const { routeTo } = useRouteTo();
@@ -44,6 +46,10 @@ export default function HomeScreen() {
         ))
         }
       </ThemedView>
+
+      <TouchableOpacity onPress={() => Linking.openURL(PRIVACY_POLICY_URL).catch(() => {})}>
+        <ThemedText style={[styles.privacyLink, { color: muted }]}>Privacy Policy</ThemedText>
+      </TouchableOpacity>
     </ThemedView>
   );
 }
@@ -82,6 +88,12 @@ const styles = StyleSheet.create({
     fontSize: 48,
     lineHeight: 56,
     fontWeight: '800',
+  },
+
+  privacyLink: {
+    fontSize: 14,
+    textDecorationLine: 'underline',
+    paddingVertical: 8,
   },
 
   homeButtonView: {
