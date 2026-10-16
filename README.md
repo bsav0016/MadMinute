@@ -10,7 +10,7 @@ A timed arithmetic drill is slow to set up by hand: someone has to write the que
 
 ## How it works
 
-1. **Settings** – turn addition, subtraction, multiplication and division on or off, and set the smallest and largest numbers with a two-handle slider (defaults: addition only, 0 to 20).
+1. **Settings** – start from a quick preset (Easy +/−, Times tables, Mixed) or set it up yourself: turn addition, subtraction, multiplication and division on or off, set the smallest and largest numbers with a two-handle slider (defaults: addition only, 0 to 20), and pick a 30, 60 or 120 second round.
 2. **Play** – a 3-second countdown, then your chosen round length (60 seconds by default). Questions are generated from your settings; tap in an answer on the built-in number pad and submit to get the next one.
 3. **Results** – correct, incorrect and skipped counts, an overall score such as `18/22`, and a review of each question.
 
@@ -44,7 +44,7 @@ The ad dependencies need a native build (`npm run android` / `npm run ios`) rath
 
 ## Limitations
 
-- Tests cover question generation (operators, ranges, subtraction and division edge cases) and the results tally (correct, incorrect and skipped, and why the unanswered last question is not counted). The screens and the timer are not tested.
+- Tests cover question generation (operators, ranges, subtraction and division edge cases), the results tally (correct, incorrect and skipped, and why the unanswered last question is not counted), the settings presets and operator display symbols. The screens, number pad and timer are not tested.
 - The banner ad provider (`contexts/BannerAdContext.tsx`) is not used by any screen yet.
 
 ## License
