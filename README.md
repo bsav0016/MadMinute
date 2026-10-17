@@ -18,7 +18,6 @@ A timed arithmetic drill is slow to set up by hand: someone has to write the que
 
 - React Native 0.76 / Expo SDK 52, TypeScript, Expo Router
 - React context for the game state (`contexts/MadMinuteContext`)
-- `react-native-google-mobile-ads` and `expo-tracking-transparency` for an ad banner (set up, but not wired into the screens yet)
 
 ## Running it
 
@@ -34,7 +33,7 @@ npm run lint         # expo lint
 
 `.github/workflows/ci.yml` runs the type check, lint, tests and a JavaScript bundle on every pull request. Store builds stay manual.
 
-The ad dependencies need a native build (`npm run android` / `npm run ios`) rather than Expo Go. `app.json` still contains a placeholder Android AdMob app ID; replace it with your own before building for Android.
+The app has no ads and does no tracking.
 
 ## Design decisions
 
@@ -45,7 +44,6 @@ The ad dependencies need a native build (`npm run android` / `npm run ios`) rath
 ## Limitations
 
 - Tests cover question generation (operators, ranges, subtraction and division edge cases), the results tally (correct, incorrect and skipped, and why the unanswered last question is not counted), the settings presets and operator display symbols. The screens, number pad and timer are not tested.
-- The banner ad provider (`contexts/BannerAdContext.tsx`) is not used by any screen yet.
 
 ## License
 
