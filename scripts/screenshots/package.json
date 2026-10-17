@@ -1,0 +1,12 @@
+{
+  "name": "madminute-screenshots",
+  "private": true,
+  "type": "module",
+  "description": "Regenerates docs/screenshots from an Android emulator. Kept separate so the app does not depend on it.",
+  "scripts": {
+    "capture": "node capture.mjs"
+  },
+  "devDependencies": {
+    "tesseract.js": "5.1.1"
+  }
+}

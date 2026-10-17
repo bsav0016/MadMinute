@@ -61,7 +61,7 @@ const styles = StyleSheet.create({
     pad: {
         width: '100%',
         paddingHorizontal: 16,
-        paddingBottom: 12,
+        paddingBottom: 20,
         gap: 8,
     },
     row: {
