@@ -176,7 +176,8 @@ const styles = StyleSheet.create({
 
     returnHomeContainer: {
         alignItems: 'center',
-        marginVertical: 10,
-        gap: 4
+        marginTop: 10,
+        marginBottom: 20,
+        gap: 10
     }
 })

@@ -35,6 +35,18 @@ npm run lint         # expo lint
 
 The app has no ads and does no tracking.
 
+### Regenerating the screenshots
+
+The images in `docs/screenshots/` are captured from an Android emulator by a script, so a refresh is a couple of commands. With an emulator running and Expo Go installed on it:
+
+```bash
+npx expo start --port 8081           # in one terminal
+cd scripts/screenshots && npm ci     # once
+node capture.mjs                     # in another; METRO_PORT, ANDROID_SERIAL and ANDROID_HOME if needed
+```
+
+It opens the app in Expo Go, turns on Android demo mode for a clean status bar, plays a 30-second round (five right answers, one wrong, one skipped) and saves the four images at the emulator's resolution (1080x2400 on a Pixel 8). Buttons are found through `uiautomator`; the question during the round is read with OCR (`tesseract.js`, which downloads its English model on first run) because `uiautomator` cannot dump the screen while the timer is running. The script has its own `package.json` so the app does not depend on it.
+
 ## Design decisions
 
 - **Timer based on elapsed time**, not on counting ticks, so the round length stays accurate if the app is briefly delayed.

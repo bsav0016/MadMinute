@@ -15,6 +15,7 @@ interface GeneralButtonProps {
 export function GeneralButton({ title, onPress, disabled=false, autoWidth=true, fontSize=20, variant='primary' }: GeneralButtonProps) {
   const surface = useThemeColor({}, 'surface');
   const border = useThemeColor({}, 'border');
+  const tint = useThemeColor({}, 'tint');
   const secondary = variant === 'secondary';
 
   return (
@@ -31,7 +32,7 @@ export function GeneralButton({ title, onPress, disabled=false, autoWidth=true, 
       disabled={disabled}
       activeOpacity={0.8}
     >
-      <Text style={[styles.buttonText, { fontSize: fontSize }, secondary && { color: Colors.button.background }]}>{title}</Text>
+      <Text style={[styles.buttonText, { fontSize: fontSize }, secondary && { color: tint }]}>{title}</Text>
     </TouchableOpacity>
   );
 }
