@@ -1,7 +1,8 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useRef, useState, ReactNode } from 'react';
 import { MadMinuteClass } from './MadMinuteClass';
 import { MadMinuteSettings } from './MadMinuteSettings';
 import { MadMinuteQuestion } from './MadMinuteQuestion';
+import { loadSettings, saveSettings } from './settingsStorage';
 
 
 interface MadMinuteContextType {
@@ -23,7 +24,20 @@ const MadMinuteContext = createContext<MadMinuteContextType>({
 export const MadMinuteProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [madMinute, setMadMinute] = useState<MadMinuteClass>(new MadMinuteClass());
 
+    // Set once the player changes settings, so a slow load of the saved ones cannot overwrite that choice.
+    const settingsChanged = useRef(false);
+
+    useEffect(() => {
+        loadSettings().then((saved) => {
+            if (saved && !settingsChanged.current) {
+                setMadMinute((current) => new MadMinuteClass(saved, current.questions));
+            }
+        });
+    }, []);
+
     const updateSettings = (newSettings: MadMinuteSettings) => {
+        settingsChanged.current = true;
+        saveSettings(newSettings);
         const updatedMadMinute = new MadMinuteClass(
             newSettings,
             madMinute.questions
