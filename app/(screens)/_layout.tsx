@@ -21,6 +21,7 @@ export default function PagesLayout() {
                   <Stack.Screen name={Routes.CreateMadMinute} options={{ headerShown: false }} />
                   <Stack.Screen name={Routes.PlayMadMinute} options={{ headerShown: false, gestureEnabled: false }} />
                   <Stack.Screen name={Routes.Results} options={{ headerShown: false, gestureEnabled: false }} />
+                  <Stack.Screen name={Routes.History} options={{ headerShown: false }} />
                 </Stack>
               </SafeAreaView>
             </ThemedView>
