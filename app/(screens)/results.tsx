@@ -6,23 +6,28 @@ import { Colors } from "@/constants/Colors";
 import { useMadMinute } from "@/contexts/MadMinuteContext/MadMinuteContext";
 import { getResponseResults } from "@/contexts/MadMinuteContext/responseResults";
 import { displayOperator } from "@/contexts/MadMinuteContext/MadMinuteOperator";
+import { getBestInfo, scoreText } from "@/contexts/MadMinuteContext/personalBest";
+import { RoundRecord } from "@/contexts/MadMinuteContext/roundRecord";
 import { useRouteTo } from "@/contexts/RouteContext";
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { Routes } from "./Routes";
 import { useThemeColor } from "@/hooks/useThemeColor";
 
 export default function Results() {
-    const { madMinute, resetMadMinute, recordRound } = useMadMinute();
+    const { madMinute, resetMadMinute, recordRound, history } = useMadMinute();
     const { routeReplace } = useRouteTo();
     const surface = useThemeColor({}, 'surface');
     const border = useThemeColor({}, 'border');
     const muted = useThemeColor({}, 'muted');
 
     // The provider makes sure a round is saved only once, however many times this screen renders.
+    const [record, setRecord] = useState<RoundRecord | null>(null);
     useEffect(() => {
-        recordRound();
+        setRecord(recordRound());
     }, []);
+
+    const bestInfo = useMemo(() => record ? getBestInfo(history, record) : null, [history, record]);
 
     const {correct, incorrect, skipped} = getResponseResults(madMinute.questions)
 
@@ -88,6 +93,17 @@ export default function Results() {
             <ThemedView style={[styles.summaryContainer, { backgroundColor: surface, borderColor: border }]}>
                 <ThemedText type="subtitle" style={styles.scoreText}>Overall Score: {correct}/{attempted}</ThemedText>
 
+                {bestInfo?.isNewBest && (
+                    <View style={styles.bestBadge}>
+                        <Text style={styles.bestBadgeText}>New personal best!</Text>
+                    </View>
+                )}
+                {bestInfo?.previousBest && (
+                    <ThemedText type="default" style={{ color: muted }}>
+                        {bestInfo.isNewBest ? "Previous best" : "Your best"} for this setup: {scoreText(bestInfo.previousBest)}
+                    </ThemedText>
+                )}
+
                 {displayFields.map((field) => (
                     <ThemedText type="default" key={field.text} style={{ color: muted }}>{field.text}: {field.value}</ThemedText>
                 ))}
@@ -128,6 +144,20 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         borderRadius: 20,
         borderWidth: 1,
+    },
+
+    bestBadge: {
+        backgroundColor: Colors.button.background,
+        borderRadius: 14,
+        paddingVertical: 4,
+        paddingHorizontal: 12,
+        marginVertical: 4,
+    },
+
+    bestBadgeText: {
+        color: Colors.button.text,
+        fontWeight: '700',
+        fontSize: 15,
     },
 
     scoreText: {
