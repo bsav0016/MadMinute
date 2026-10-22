@@ -5,6 +5,7 @@ export const STORAGE_VERSION = 1;
 
 export const STORAGE_KEYS = {
     settings: "madminute.settings",
+    history: "madminute.history",
 } as const;
 
 // Returns the stored data, or null if it is missing, unreadable or from another version.

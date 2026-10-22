@@ -7,17 +7,22 @@ import { useMadMinute } from "@/contexts/MadMinuteContext/MadMinuteContext";
 import { getResponseResults } from "@/contexts/MadMinuteContext/responseResults";
 import { displayOperator } from "@/contexts/MadMinuteContext/MadMinuteOperator";
 import { useRouteTo } from "@/contexts/RouteContext";
-import React from "react";
+import React, { useEffect } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { Routes } from "./Routes";
 import { useThemeColor } from "@/hooks/useThemeColor";
 
 export default function Results() {
-    const { madMinute, resetMadMinute } = useMadMinute();
+    const { madMinute, resetMadMinute, recordRound } = useMadMinute();
     const { routeReplace } = useRouteTo();
     const surface = useThemeColor({}, 'surface');
     const border = useThemeColor({}, 'border');
     const muted = useThemeColor({}, 'muted');
+
+    // The provider makes sure a round is saved only once, however many times this screen renders.
+    useEffect(() => {
+        recordRound();
+    }, []);
 
     const {correct, incorrect, skipped} = getResponseResults(madMinute.questions)
 
