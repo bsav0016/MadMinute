@@ -17,7 +17,8 @@ export default function HomeScreen() {
   const tint = useThemeColor({}, 'tint');
 
   const homeButtons = [
-    { title: "Start", route: Routes.CreateMadMinute },
+    { title: "Start", route: Routes.CreateMadMinute, variant: 'primary' as const },
+    { title: "History", route: Routes.History, variant: 'secondary' as const },
   ]
 
   return (
@@ -42,6 +43,7 @@ export default function HomeScreen() {
             title={homeButton.title}
             onPress={() => routeTo(homeButton.route)}
             autoWidth={false}
+            variant={homeButton.variant}
           />
         ))
         }

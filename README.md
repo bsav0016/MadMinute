@@ -12,7 +12,8 @@ A timed arithmetic drill is slow to set up by hand: someone has to write the que
 
 1. **Settings** – start from a quick preset (Easy +/−, Times tables, Mixed) or set it up yourself: turn addition, subtraction, multiplication and division on or off, set the smallest and largest numbers with a two-handle slider (defaults: addition only, 0 to 20), and pick a 30, 60 or 120 second round.
 2. **Play** – a 3-second countdown, then your chosen round length (60 seconds by default). Questions are generated from your settings; tap in an answer on the built-in number pad and submit to get the next one.
-3. **Results** – correct, incorrect and skipped counts, an overall score such as `18/22`, and a review of each question.
+3. **Results** – correct, incorrect and skipped counts, an overall score such as `18/22`, a review of each question, and a "New personal best!" badge (with your previous best) when you beat your earlier score for the same operations and round length.
+4. **History** – opened from the home screen: your overall accuracy, a bar chart of your last 10 rounds, accuracy for each operation, and your best score for each setup, with a button to clear it all.
 
 ## Stack
 
@@ -51,11 +52,13 @@ It opens the app in Expo Go, turns on Android demo mode for a clean status bar, 
 
 - **Timer based on elapsed time**, not on counting ticks, so the round length stays accurate if the app is briefly delayed.
 - **Questions and settings as small classes** (`MadMinuteQuestion`, `MadMinuteSettings`, `MadMinuteOperator`) kept in a context, so the settings, play and results screens share one source of truth.
-- **No backend or account**: everything runs on the device.
+- **No backend or account**: everything runs on the device. Your settings and a small summary of each finished round (the last 200; no questions) are saved with AsyncStorage, and nothing is sent anywhere.
+- **Saved data is versioned and validated**: values are stored as `{ v, data }`, and anything corrupt or out of range is ignored instead of crashing the app. Each round gets an id, so the results screen can only save it once.
+- **Personal bests are per setup**: a best is kept for each mix of operations and round length (the number range is ignored), ranked by correct answers and then accuracy.
 
 ## Limitations
 
-- Tests cover question generation (operators, ranges, subtraction and division edge cases), the results tally (correct, incorrect and skipped, and why the unanswered last question is not counted), the settings presets and operator display symbols. The screens, number pad and timer are not tested.
+- Tests cover question generation (operators, ranges, subtraction and division edge cases), the results tally (correct, incorrect and skipped, and why the unanswered last question is not counted), the settings presets and operator display symbols, saving and loading settings, building and capping round records (including saving a round only once), personal bests and the history statistics. The screens, number pad and timer are not tested.
 
 ## License
 
