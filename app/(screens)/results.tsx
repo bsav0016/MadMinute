@@ -14,6 +14,49 @@ import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { Routes } from "./Routes";
 import { useThemeColor } from "@/hooks/useThemeColor";
 
+interface QuestionResultProps {
+    question: string;
+    answer: string;
+    response: string;
+    header?: boolean
+}
+
+const QuestionResult = ({question, answer, response, header=false}: QuestionResultProps) => {
+    const themedText = useThemeColor({}, 'text');
+    const pageBackground = useThemeColor({}, 'background');
+    let backgroundColor;
+    if (header) {
+        backgroundColor = pageBackground
+    }
+    else if (!response) {
+        backgroundColor = Colors.results.skipped
+    }
+    else if (answer === response) {
+        backgroundColor = Colors.results.correct
+    }
+    else {
+        backgroundColor = Colors.results.incorrect
+    }
+
+    const textColor = header ? themedText : '#111827';
+
+    return (
+        <ThemedView style={[styles.resultContainer, header && styles.headerRow, {backgroundColor: backgroundColor}]}>
+            <View style={styles.questionLabelContainer}>
+                <Text style={[styles.resultsText, header && styles.headerText, { color: textColor }]}>{question}</Text>
+            </View>
+
+            <View style={styles.answerLabelContainer}>
+                <Text style={[styles.resultsText, header && styles.headerText, { color: textColor }]}>{answer}</Text>
+            </View>
+
+            <View style={styles.responseLabelContainer}>
+                <Text style={[styles.resultsText, header && styles.headerText, { color: textColor }]}>{response}</Text>
+            </View>
+        </ThemedView>
+    )
+}
+
 export default function Results() {
     const { madMinute, resetMadMinute, recordRound, history } = useMadMinute();
     const { routeReplace } = useRouteTo();
@@ -24,6 +67,8 @@ export default function Results() {
     // The provider makes sure a round is saved only once, however many times this screen renders.
     const [record, setRecord] = useState<RoundRecord | null>(null);
     useEffect(() => {
+        // Saving the round is a side effect that has to happen once the screen is up; the provider makes it idempotent.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setRecord(recordRound());
     }, []);
 
@@ -43,49 +88,6 @@ export default function Results() {
     const playAgain = () => {
         resetMadMinute();
         routeReplace(Routes.PlayMadMinute);
-    }
-
-    interface QuestionResultProps {
-        question: string;
-        answer: string;
-        response: string;
-        header?: boolean
-    }
-
-    const QuestionResult = ({question, answer, response, header=false}: QuestionResultProps) => {
-        const themedText = useThemeColor({}, 'text');
-        const pageBackground = useThemeColor({}, 'background');
-        let backgroundColor;
-        if (header) {
-            backgroundColor = pageBackground
-        }
-        else if (!response) {
-            backgroundColor = Colors.results.skipped
-        }
-        else if (answer === response) {
-            backgroundColor = Colors.results.correct
-        }
-        else {
-            backgroundColor = Colors.results.incorrect
-        }
-
-        const textColor = header ? themedText : '#111827';
-
-        return (
-            <ThemedView style={[styles.resultContainer, header && styles.headerRow, {backgroundColor: backgroundColor}]}>
-                <View style={styles.questionLabelContainer}>
-                    <Text style={[styles.resultsText, header && styles.headerText, { color: textColor }]}>{question}</Text>
-                </View>
-
-                <View style={styles.answerLabelContainer}>
-                    <Text style={[styles.resultsText, header && styles.headerText, { color: textColor }]}>{answer}</Text>
-                </View>
-
-                <View style={styles.responseLabelContainer}>
-                    <Text style={[styles.resultsText, header && styles.headerText, { color: textColor }]}>{response}</Text>
-                </View>
-            </ThemedView>
-        )
     }
 
     return(
