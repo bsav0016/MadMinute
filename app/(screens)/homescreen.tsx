@@ -1,7 +1,7 @@
 import React from "react";
 import { Linking, StyleSheet, TouchableOpacity } from "react-native";
 import { useRouteTo } from "@/contexts/RouteContext";
-import { Routes } from "@/app/(screens)/Routes";
+import { Routes } from "@/constants/Routes";
 import { ThemedView } from "@/components/ThemedView";
 import { ThemedText } from "@/components/ThemedText";
 import { GeneralButton } from "@/components/GeneralButton";

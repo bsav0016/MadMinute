@@ -3,7 +3,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack } from 'expo-router';
 import { RouteProvider } from '@/contexts/RouteContext';
 import { LoadingProvider } from '@/contexts/LoadingContext';
-import { Routes } from './Routes';
+import { Routes } from "@/constants/Routes";
 import { ThemedView } from '@/components/ThemedView';
 import { ToastProvider } from '@/contexts/ToastContext';
 import { MadMinuteProvider } from '@/contexts/MadMinuteContext/MadMinuteContext';

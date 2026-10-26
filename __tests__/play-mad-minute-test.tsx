@@ -2,8 +2,8 @@ import React from 'react';
 import { act, create, ReactTestInstance } from 'react-test-renderer';
 import { Text, TouchableOpacity } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import PlayMadMinute from '../play-mad-minute';
-import { Routes } from '../Routes';
+import PlayMadMinute from '@/app/(screens)/play-mad-minute';
+import { Routes } from '@/constants/Routes';
 import { MadMinuteProvider, useMadMinute } from '@/contexts/MadMinuteContext/MadMinuteContext';
 
 jest.mock('@react-native-async-storage/async-storage', () =>

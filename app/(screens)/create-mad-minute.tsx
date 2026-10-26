@@ -9,7 +9,7 @@ import { ThemedView } from "@/components/ThemedView";
 import { ThemedText } from "@/components/ThemedText";
 import { useRouteTo } from "@/contexts/RouteContext";
 import { GeneralButton } from "@/components/GeneralButton";
-import { Routes } from "./Routes";
+import { Routes } from "@/constants/Routes";
 import { useToast } from "@/contexts/ToastContext";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { Colors } from "@/constants/Colors";

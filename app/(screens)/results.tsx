@@ -11,7 +11,7 @@ import { RoundRecord } from "@/contexts/MadMinuteContext/roundRecord";
 import { useRouteTo } from "@/contexts/RouteContext";
 import React, { useEffect, useMemo, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
-import { Routes } from "./Routes";
+import { Routes } from "@/constants/Routes";
 import { useThemeColor } from "@/hooks/useThemeColor";
 
 interface QuestionResultProps {

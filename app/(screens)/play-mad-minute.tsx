@@ -4,7 +4,7 @@ import { useMadMinute } from "@/contexts/MadMinuteContext/MadMinuteContext";
 import { useRouteTo } from "@/contexts/RouteContext";
 import React, { useEffect, useRef, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { Routes } from "./Routes";
+import { Routes } from "@/constants/Routes";
 import { ThemedText } from "@/components/ThemedText";
 import { GeneralButton } from "@/components/GeneralButton";
 import { FormattedQuestion } from "@/components/FormattedQuestion";

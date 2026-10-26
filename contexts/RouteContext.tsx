@@ -1,6 +1,6 @@
 import React, { createContext, useContext, ReactNode } from 'react';
 import { useRouter } from 'expo-router';
-import { Routes } from '@/app/(screens)/Routes';
+import { Routes } from "@/constants/Routes";
 
 const RouteContext = createContext({
   routeTo: (route: Routes, props?: Record<string, any>) => {},
