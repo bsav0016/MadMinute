@@ -28,7 +28,6 @@ export default function PlayMadMinute() {
     const lowTimeSeconds = 10
 
     const [timeRemaining, setTimeRemaining] = useState<number>(startTimeRemaining);
-    const [currentQuestion, setCurrentQuestion] = useState<MadMinuteQuestion | undefined>(undefined);
     const [response, setResponse] = useState<string>('');
 
     const startTimeRef = useRef(0);
@@ -60,10 +59,11 @@ export default function PlayMadMinute() {
         };
     }, [routeTo]);
 
+    // The question on screen is always the newest one.
+    const currentQuestion: MadMinuteQuestion | undefined = madMinute.questions.at(-1);
+
     useEffect(() => {
-        if (madMinute.questions.length > 0) {
-            setCurrentQuestion(madMinute.questions.at(-1));
-        } else {
+        if (madMinute.questions.length === 0) {
             addQuestion();
         }
     }, [madMinute.questions.length])
