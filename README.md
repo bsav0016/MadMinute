@@ -17,7 +17,7 @@ A timed arithmetic drill is slow to set up by hand: someone has to write the que
 
 ## Stack
 
-- React Native 0.76 / Expo SDK 52, TypeScript, Expo Router
+- React Native 0.88 / Expo SDK 58, React 19, TypeScript 6, Expo Router (needs Node 22.13 or newer)
 - React context for the game state (`contexts/MadMinuteContext`)
 
 ## Running it
