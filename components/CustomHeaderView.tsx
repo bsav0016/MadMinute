@@ -6,7 +6,7 @@ import { ThemedView } from "./ThemedView";
 import { ThemedText } from "./ThemedText";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "@/constants/Colors";
-import { Routes } from "@/app/(screens)/Routes";
+import { Routes } from "@/constants/Routes";
 
 
 interface CustomHeaderProps {
@@ -26,7 +26,7 @@ export function CustomHeaderView({
     style,
 }: CustomHeaderProps) {
     const router = useRouter();
-    const handleBackPress = goBack || router.back
+    const handleBackPress = goBack || (() => router.back())
 
     return (
         <ThemedView style={[styles.screenView, style]}>
