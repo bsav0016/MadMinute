@@ -7,7 +7,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { GeneralButton } from "@/components/GeneralButton";
 import { useThemeColor } from "@/hooks/useThemeColor";
 
-const PRIVACY_POLICY_URL = "https://frameonapp.weebly.com/math-mad-minute-privacy-policy.html";
+const PRIVACY_POLICY_URL = "https://bsav0016.github.io/MadMinute/privacy";
 
 export default function HomeScreen() {
   const { routeTo } = useRouteTo();
