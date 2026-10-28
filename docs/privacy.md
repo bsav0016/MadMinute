@@ -28,4 +28,4 @@ If this policy changes, the effective date above will be updated. The full histo
 
 ## Contact us
 
-Questions about this policy can be raised as an issue at <https://github.com/bsav0016/MadMinute/issues>.
+Questions about this policy can be sent to <savidgeapps@gmail.com>.
