@@ -14,7 +14,7 @@ import { NumberPad } from "@/components/NumberPad";
 import { Colors } from "@/constants/Colors";
 
 export default function PlayMadMinute() {
-    const { madMinute, addQuestion, submitResponse } = useMadMinute();
+    const { madMinute, addQuestion, submitResponse, markQuestionShown } = useMadMinute();
     const { routeTo } = useRouteTo();
     const color = useThemeColor({}, 'text');
     const surface = useThemeColor({}, 'surface');
@@ -67,6 +67,15 @@ export default function PlayMadMinute() {
             addQuestion();
         }
     }, [madMinute.questions.length])
+
+    // Answer times start when the countdown ends, not when the first question was made behind it.
+    const roundStarted = timeRemaining <= roundSeconds;
+    useEffect(() => {
+        if (roundStarted) {
+            markQuestionShown();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- once, when the round starts
+    }, [roundStarted])
 
     const submitQuestion = (answer: string) => {
         if (currentQuestion) {
