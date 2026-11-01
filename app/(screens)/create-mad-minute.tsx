@@ -13,6 +13,7 @@ import { Routes } from "@/constants/Routes";
 import { useToast } from "@/contexts/ToastContext";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { Colors } from "@/constants/Colors";
+import { ENOUGH_ATTEMPTS, hasEnoughData } from "@/contexts/MadMinuteContext/factStats";
 import { DURATION_OPTIONS_SECONDS, matchesPreset, Preset, PRESETS } from "@/contexts/MadMinuteContext/presets";
 
 export default function CreateMadMinute() {
@@ -20,7 +21,9 @@ export default function CreateMadMinute() {
     const border = useThemeColor({}, 'border');
     const muted = useThemeColor({}, 'muted');
     const text = useThemeColor({}, 'text');
-    const { madMinute, updateSettings, resetMadMinute } = useMadMinute();
+    const { madMinute, updateSettings, resetMadMinute, facts } = useMadMinute();
+    // Focus mode needs enough answers on record to know what is weak.
+    const canFocus = hasEnoughData(facts);
     const { routeTo } = useRouteTo();
     const { addToast } = useToast();
     const [localSettings, setLocalSettings] = useState<MadMinuteSettings>(madMinute.settings);
@@ -36,14 +39,16 @@ export default function CreateMadMinute() {
                 value,
                 localSettings.maxValue,
                 localSettings.availableOperators,
-                localSettings.durationSeconds
+                localSettings.durationSeconds,
+                localSettings.focusOnWeakSpots
             );
         } else {
             newLocalSettings = new MadMinuteSettings(
                 localSettings.minValue,
                 value,
                 localSettings.availableOperators,
-                localSettings.durationSeconds
+                localSettings.durationSeconds,
+                localSettings.focusOnWeakSpots
             );
         }
         setLocalSettings(newLocalSettings);
@@ -69,7 +74,8 @@ export default function CreateMadMinute() {
             preset.minValue,
             preset.maxValue,
             preset.availableOperators,
-            localSettings.durationSeconds
+            localSettings.durationSeconds,
+            localSettings.focusOnWeakSpots
         ));
     }
 
@@ -78,7 +84,18 @@ export default function CreateMadMinute() {
             localSettings.minValue,
             localSettings.maxValue,
             localSettings.availableOperators,
-            durationSeconds
+            durationSeconds,
+            localSettings.focusOnWeakSpots
+        ));
+    }
+
+    const setFocus = (focusOnWeakSpots: boolean) => {
+        setLocalSettings(new MadMinuteSettings(
+            localSettings.minValue,
+            localSettings.maxValue,
+            localSettings.availableOperators,
+            localSettings.durationSeconds,
+            focusOnWeakSpots
         ));
     }
 
@@ -170,6 +187,25 @@ export default function CreateMadMinute() {
                             />
                         ))}
                     </ThemedView>
+                </ThemedView>
+                <ThemedView style={[styles.card, { backgroundColor: surface, borderColor: border }]}>
+                    <ThemedText style={[styles.cardTitle, { color: muted }]}>Practice</ThemedText>
+                    <ThemedView style={[styles.buttonContainer, { backgroundColor: surface }]}>
+                        <ThemedText style={[styles.operatorLabel, { backgroundColor: 'transparent' }]}>Focus on my weak spots</ThemedText>
+                        <Switch
+                            value={canFocus && localSettings.focusOnWeakSpots}
+                            disabled={!canFocus}
+                            onValueChange={setFocus}
+                            accessibilityLabel="Focus on my weak spots"
+                            thumbColor={canFocus && localSettings.focusOnWeakSpots ? Colors.button.background : '#ccc'}
+                            trackColor={{ false: '#ddd', true: '#b9c4f7' }}
+                        />
+                    </ThemedView>
+                    <ThemedText style={{ color: muted }}>
+                        {canFocus
+                            ? "About half the questions will be the problems you miss or answer slowly. The rest are the usual mix."
+                            : `Available after you have answered ${ENOUGH_ATTEMPTS} questions, so there is enough to go on.`}
+                    </ThemedText>
                 </ThemedView>
             </ScrollView>
             <ThemedView style={styles.startButtonContainer}>

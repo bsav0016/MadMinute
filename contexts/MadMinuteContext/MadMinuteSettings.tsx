@@ -7,16 +7,20 @@ export class MadMinuteSettings {
     maxValue: number;
     availableOperators: MadMinuteOperator[];
     durationSeconds: number;
+    // Off by default. Asks the player's weakest problems more often (see focus.ts).
+    focusOnWeakSpots: boolean;
 
     constructor(
         minValue: number = 0, 
         maxValue: number = 20, 
         availableOperators: MadMinuteOperator[] = [MadMinuteOperator.Addition],
-        durationSeconds: number = DEFAULT_DURATION_SECONDS
+        durationSeconds: number = DEFAULT_DURATION_SECONDS,
+        focusOnWeakSpots: boolean = false
     ) {
         this.minValue = minValue
         this.maxValue = maxValue
         this.availableOperators = availableOperators
         this.durationSeconds = durationSeconds
+        this.focusOnWeakSpots = focusOnWeakSpots
     }
 }

@@ -7,6 +7,7 @@ import { clearHistory as clearStoredHistory, loadHistory, saveHistory } from './
 import { applyRound, FactStats } from './factStats';
 import { clearFacts, loadFacts, saveFacts } from './factStorage';
 import { MadMinuteQuestion } from './MadMinuteQuestion';
+import { focusPool } from './focus';
 
 
 interface MadMinuteContextType {
@@ -110,7 +111,7 @@ export const MadMinuteProvider: React.FC<{ children: ReactNode }> = ({ children 
     };
 
     const addQuestion = () => {
-        const newQuestion = madMinute.generateNewQuestion();
+        const newQuestion = madMinute.generateNewQuestion(Date.now(), focusPool(factsRef.current, madMinute.settings));
     
         const updatedMadMinute = new MadMinuteClass(
             madMinute.settings,
@@ -127,7 +128,9 @@ export const MadMinuteProvider: React.FC<{ children: ReactNode }> = ({ children 
         );
         let updatedMadMinute = new MadMinuteClass(madMinute.settings, updatedQuestions);
 
-        const newQuestion = updatedMadMinute.generateNewQuestion();
+        const newQuestion = updatedMadMinute.generateNewQuestion(
+            Date.now(), focusPool(factsRef.current, updatedMadMinute.settings)
+        );
         updatedMadMinute = new MadMinuteClass(
             updatedMadMinute.settings,
             [...updatedMadMinute.questions, newQuestion]
