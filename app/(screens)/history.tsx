@@ -5,21 +5,28 @@ import { ThemedView } from "@/components/ThemedView";
 import { useMadMinute } from "@/contexts/MadMinuteContext/MadMinuteContext";
 import { bestRounds, operatorAccuracy, recentTrend, summarize } from "@/contexts/MadMinuteContext/historyStats";
 import { displayOperator } from "@/contexts/MadMinuteContext/MadMinuteOperator";
+import { weakestFacts } from "@/contexts/MadMinuteContext/factStats";
+import { factLabel, gridFactsNeedingWork, spotDetail, timesTableGrid } from "@/contexts/MadMinuteContext/troubleSpots";
+import { TimesTableGrid } from "@/components/TimesTableGrid";
 import { scoreText } from "@/contexts/MadMinuteContext/personalBest";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import React from "react";
 import { Alert, ScrollView, StyleSheet, View } from "react-native";
 
 const BAR_AREA_HEIGHT = 90;
+const TROUBLE_SPOTS_SHOWN = 5;
 
 export default function History() {
-    const { history, clearHistory } = useMadMinute();
+    const { history, clearHistory, facts } = useMadMinute();
     const surface = useThemeColor({}, 'surface');
     const border = useThemeColor({}, 'border');
     const muted = useThemeColor({}, 'muted');
     const tint = useThemeColor({}, 'tint');
 
     const summary = summarize(history);
+    const spots = weakestFacts(facts, TROUBLE_SPOTS_SHOWN);
+    const grid = timesTableGrid(facts);
+    const hasMultiplication = grid.some((cells) => cells.some((cell) => cell.level !== "unseen"));
     const trend = recentTrend(history);
     const bests = bestRounds(history);
     const operators = operatorAccuracy(history);
@@ -82,6 +89,39 @@ export default function History() {
                             </View>
                         ))}
                     </ThemedView>
+
+                    <ThemedView style={card}>
+                        <ThemedText style={cardTitle}>Trouble spots</ThemedText>
+                        {spots.length === 0 ? (
+                            <ThemedText style={{ color: muted }}>
+                                Nothing stands out yet. After a few more rounds, the problems you miss or answer slowly will be listed here.
+                            </ThemedText>
+                        ) : (
+                            spots.map((spot) => (
+                                <View
+                                    key={spot.key}
+                                    style={styles.bestRow}
+                                    accessible
+                                    accessibilityLabel={`${factLabel(spot.fact)}, ${spotDetail(spot)}`}
+                                >
+                                    <ThemedText type="defaultSemiBold" style={styles.spotLabel}>{factLabel(spot.fact)}</ThemedText>
+                                    <ThemedText style={{ color: muted }}>{spotDetail(spot)}</ThemedText>
+                                </View>
+                            ))
+                        )}
+                    </ThemedView>
+
+                    {hasMultiplication && (
+                        <ThemedView style={card}>
+                            <ThemedText style={cardTitle}>Times table</ThemedText>
+                            <TimesTableGrid grid={grid} />
+                            <ThemedText style={[styles.barCaption, { color: muted }]}>
+                                {gridFactsNeedingWork(grid) === 0
+                                    ? "Multiplication from 1 to 12. Nothing needs work so far."
+                                    : "Multiplication from 1 to 12. Red squares need the most work."}
+                            </ThemedText>
+                        </ThemedView>
+                    )}
 
                     <ThemedView style={card}>
                         <ThemedText style={cardTitle}>Personal bests</ThemedText>
@@ -191,6 +231,10 @@ const styles = StyleSheet.create({
     fill: {
         height: '100%',
         borderRadius: 5,
+    },
+
+    spotLabel: {
+        fontSize: 18,
     },
 
     rowValue: {
