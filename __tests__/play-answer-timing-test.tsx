@@ -19,6 +19,9 @@ jest.mock('@/contexts/RouteContext', () => ({ useRouteTo: () => ({ routeTo: mock
 
 const COUNTDOWN = 3;
 
+// The first render in this file loads and compiles the whole play screen, which takes over the 5 s default on a cold CI machine.
+jest.setTimeout(30000);
+
 type Api = ReturnType<typeof useMadMinute>;
 
 async function render() {
