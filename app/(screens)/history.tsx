@@ -27,7 +27,7 @@ export default function History() {
     const confirmClear = () => {
         Alert.alert(
             "Clear all history?",
-            "This deletes your past rounds and personal bests from this device. It cannot be undone.",
+            "This deletes your past rounds, personal bests and your record of which problems you miss from this device. It cannot be undone.",
             [
                 { text: "Cancel", style: "cancel" },
                 { text: "Clear", style: "destructive", onPress: clearHistory },

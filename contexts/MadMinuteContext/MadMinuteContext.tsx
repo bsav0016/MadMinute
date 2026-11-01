@@ -4,6 +4,9 @@ import { MadMinuteSettings } from './MadMinuteSettings';
 import { loadSettings, saveSettings } from './settingsStorage';
 import { addRecord, buildRoundRecord, RoundRecord } from './roundRecord';
 import { clearHistory as clearStoredHistory, loadHistory, saveHistory } from './historyStorage';
+import { applyRound, FactStats } from './factStats';
+import { clearFacts, loadFacts, saveFacts } from './factStorage';
+import { MadMinuteQuestion } from './MadMinuteQuestion';
 
 
 interface MadMinuteContextType {
@@ -16,6 +19,7 @@ interface MadMinuteContextType {
     history: RoundRecord[];
     recordRound: () => RoundRecord | null;
     clearHistory: () => void;
+    facts: FactStats;
 }
 
 const MadMinuteContext = createContext<MadMinuteContextType>({
@@ -27,7 +31,8 @@ const MadMinuteContext = createContext<MadMinuteContextType>({
     resetMadMinute: () => {},
     history: [],
     recordRound: () => null,
-    clearHistory: () => {}
+    clearHistory: () => {},
+    facts: {}
 });
 
 const newRoundId = () => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
@@ -62,6 +67,35 @@ export const MadMinuteProvider: React.FC<{ children: ReactNode }> = ({ children 
             if (!saved) return;
             // Anything recorded while the load was running is newer, so it goes on top.
             changeHistory([...historyRef.current].reverse().reduce(addRecord, saved));
+        });
+    }, []);
+
+    // The player's record of each problem. Like the history it is kept on the device, loaded at launch, and added to
+    // once per finished round (the round id guard in recordRound covers both).
+    const [facts, setFacts] = useState<FactStats>({});
+    const factsRef = useRef<FactStats>({});
+    const factsLoaded = useRef(false);
+    // Rounds finished while the saved facts were still loading. They are applied on top of what loads, so neither is lost.
+    const roundsBeforeLoad = useRef<{ questions: MadMinuteQuestion[]; playedAt: number }[]>([]);
+    // Bumped when the facts are cleared, so a load that was already running cannot bring the old ones back.
+    const factsGeneration = useRef(0);
+
+    const changeFacts = (next: FactStats) => {
+        factsRef.current = next;
+        setFacts(next);
+    };
+
+    useEffect(() => {
+        const generation = factsGeneration.current;
+        loadFacts().then((saved) => {
+            if (generation !== factsGeneration.current) return; // cleared while loading
+            factsLoaded.current = true;
+            const queued = roundsBeforeLoad.current;
+            roundsBeforeLoad.current = [];
+            if (!saved && queued.length === 0) return;
+            const merged = queued.reduce((stats, round) => applyRound(stats, round.questions, round.playedAt), saved ?? {});
+            changeFacts(merged);
+            if (queued.length > 0) saveFacts(merged);
         });
     }, []);
 
@@ -122,12 +156,22 @@ export const MadMinuteProvider: React.FC<{ children: ReactNode }> = ({ children 
     // Called by the results screen. Saves the finished round once and returns its record (null if nothing was attempted).
     const recordRound = (): RoundRecord | null => {
         if (recordedRound.current?.id === roundId.current) return recordedRound.current.record;
-        const record = buildRoundRecord(madMinute.settings, madMinute.questions, roundId.current, Date.now());
+        const playedAt = Date.now();
+        const record = buildRoundRecord(madMinute.settings, madMinute.questions, roundId.current, playedAt);
         recordedRound.current = { id: roundId.current, record };
         if (record) {
             const next = addRecord(historyRef.current, record);
             changeHistory(next);
             saveHistory(next);
+
+            const nextFacts = applyRound(factsRef.current, madMinute.questions, playedAt);
+            changeFacts(nextFacts);
+            if (factsLoaded.current) {
+                saveFacts(nextFacts);
+            } else {
+                // Saving now would overwrite facts that have not loaded yet. The load applies this round and saves.
+                roundsBeforeLoad.current.push({ questions: madMinute.questions, playedAt });
+            }
         }
         return record;
     };
@@ -135,10 +179,16 @@ export const MadMinuteProvider: React.FC<{ children: ReactNode }> = ({ children 
     const clearHistory = () => {
         changeHistory([]);
         clearStoredHistory();
+        // The record of each problem goes with the history, and so does anything still waiting to be added to it.
+        factsGeneration.current += 1;
+        factsLoaded.current = true;
+        roundsBeforeLoad.current = [];
+        changeFacts({});
+        clearFacts();
     };
 
     return (
-        <MadMinuteContext.Provider value={{ madMinute, updateSettings, addQuestion, submitResponse, markQuestionShown, resetMadMinute, history, recordRound, clearHistory }}>
+        <MadMinuteContext.Provider value={{ madMinute, updateSettings, addQuestion, submitResponse, markQuestionShown, resetMadMinute, history, recordRound, clearHistory, facts }}>
             {children}
         </MadMinuteContext.Provider>
     );
