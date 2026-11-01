@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useEffect, useRef, useState, ReactNode } from 'react';
 import { MadMinuteClass } from './MadMinuteClass';
 import { MadMinuteSettings } from './MadMinuteSettings';
-import { MadMinuteQuestion } from './MadMinuteQuestion';
 import { loadSettings, saveSettings } from './settingsStorage';
 import { addRecord, buildRoundRecord, RoundRecord } from './roundRecord';
 import { clearHistory as clearStoredHistory, loadHistory, saveHistory } from './historyStorage';
@@ -12,6 +11,7 @@ interface MadMinuteContextType {
     updateSettings: (newSettings: MadMinuteSettings) => void;
     addQuestion: () => void;
     submitResponse: (response: string, id: number) => void;
+    markQuestionShown: () => void;
     resetMadMinute: () => void;
     history: RoundRecord[];
     recordRound: () => RoundRecord | null;
@@ -23,6 +23,7 @@ const MadMinuteContext = createContext<MadMinuteContextType>({
     updateSettings: () => {},
     addQuestion: () => {},
     submitResponse: () => {},
+    markQuestionShown: () => {},
     resetMadMinute: () => {},
     history: [],
     recordRound: () => null,
@@ -86,20 +87,10 @@ export const MadMinuteProvider: React.FC<{ children: ReactNode }> = ({ children 
     }
 
     const submitResponse = (response: string, id: number) => {
-        const updatedQuestions = madMinute.questions.map((question) => {
-            if (question.id === id) {
-                const updatedQuestion = new MadMinuteQuestion(
-                    question.id,
-                    question.value1,
-                    question.value2,
-                    question.operator,
-                    question.answer,
-                    response
-                );
-                return updatedQuestion;
-            }
-            return question;
-        });
+        const answeredAt = Date.now();
+        const updatedQuestions = madMinute.questions.map((question) =>
+            question.id === id ? question.withResponse(response, answeredAt) : question
+        );
         let updatedMadMinute = new MadMinuteClass(madMinute.settings, updatedQuestions);
 
         const newQuestion = updatedMadMinute.generateNewQuestion();
@@ -109,6 +100,17 @@ export const MadMinuteProvider: React.FC<{ children: ReactNode }> = ({ children 
         );
 
         setMadMinute(updatedMadMinute);
+    };
+
+    // The first question is made while the 3-2-1 countdown is still showing, so the play screen calls this when the
+    // round really starts, to stop that countdown counting as thinking time.
+    const markQuestionShown = () => {
+        const shownAt = Date.now();
+        setMadMinute((current) => {
+            const newest = current.questions.at(-1);
+            if (!newest || newest.response) return current;
+            return new MadMinuteClass(current.settings, [...current.questions.slice(0, -1), newest.withShownAt(shownAt)]);
+        });
     };
 
     const resetMadMinute = () => {
@@ -136,7 +138,7 @@ export const MadMinuteProvider: React.FC<{ children: ReactNode }> = ({ children 
     };
 
     return (
-        <MadMinuteContext.Provider value={{ madMinute, updateSettings, addQuestion, submitResponse, resetMadMinute, history, recordRound, clearHistory }}>
+        <MadMinuteContext.Provider value={{ madMinute, updateSettings, addQuestion, submitResponse, markQuestionShown, resetMadMinute, history, recordRound, clearHistory }}>
             {children}
         </MadMinuteContext.Provider>
     );
