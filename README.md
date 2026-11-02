@@ -2,7 +2,8 @@
 
 Mobile app for the classic "mad minute" arithmetic drill: answer as many math problems as you can in 30, 60 or 120 seconds, then see how you did. You choose which operations to practise and the range of numbers.
 
-<p><img src="docs/screenshots/home.png" alt="Home screen" width="24%"> <img src="docs/screenshots/settings.png" alt="Settings: number range and operations" width="24%"> <img src="docs/screenshots/question.png" alt="A question in progress" width="24%"> <img src="docs/screenshots/results.png" alt="Results with correct, incorrect and skipped answers" width="24%"></p>
+<p><img src="docs/screenshots/home.png" alt="Home screen" width="24%"> <img src="docs/screenshots/settings.png" alt="Settings: number range and operations" width="24%"> <img src="docs/screenshots/question.png" alt="A question in progress" width="24%"> <img src="docs/screenshots/results.png" alt="Results with correct, incorrect and skipped answers and a Worth another look note" width="24%"></p>
+<p><img src="docs/screenshots/history.png" alt="History: totals, recent rounds and accuracy by operation" width="24%"> <img src="docs/screenshots/times-table.png" alt="History: a times table coloured by how well each fact is known" width="24%"> <img src="docs/screenshots/focus.png" alt="Settings: the Focus on my weak spots switch" width="24%"></p>
 
 ## Why it exists
 
@@ -46,7 +47,9 @@ cd scripts/screenshots && npm ci     # once
 node capture.mjs                     # in another; METRO_PORT, ANDROID_SERIAL and ANDROID_HOME if needed
 ```
 
-It opens the app in Expo Go, turns on Android demo mode for a clean status bar, plays a 30-second round (five right answers, one wrong, one skipped) and saves the four images at the emulator's resolution (1080x2400 on a Pixel 8). Buttons are found through `uiautomator`; the question during the round is read with OCR (`tesseract.js`, which downloads its English model on first run) because `uiautomator` cannot dump the screen while the timer is running. The script has its own `package.json` so the app does not depend on it.
+It opens the app in Expo Go, turns on Android demo mode for a clean status bar, plays a 30-second round (five right answers, one wrong, one skipped) and saves the four images at the emulator's resolution (1080x2400 on a Pixel 8).
+
+Three more images (History, the times table, and the focus switch in Settings) need saved data, so they are only taken with `SEEDED=1`. To make that data, run `node scripts/screenshots/make-seed.mjs`, which writes a made-up player to `storage/seed.local.json` (git-ignored). The app does not read that file by itself: for the capture, temporarily make `loadStored` in `storage/storage.ts` fall back to `require("./seed.local.json")[key]` (writing it to AsyncStorage) when nothing is saved for a key, clear Expo Go's data so the capture starts from the seed alone, then run `SEEDED=1 node capture.mjs` and undo the change. Buttons are found through `uiautomator`; the question during the round is read with OCR (`tesseract.js`, which downloads its English model on first run) because `uiautomator` cannot dump the screen while the timer is running. The script has its own `package.json` so the app does not depend on it.
 
 ## Design decisions
 
