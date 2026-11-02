@@ -11,7 +11,11 @@
 // pad is tapped at positions given as fractions of the screen (measured on a Pixel 8).
 // Android demo mode gives a clean status bar (09:00, full battery and signal).
 //
-// Environment: NIGHT=1 (capture in dark mode), SHOT_DIR (write somewhere other than
+// SEEDED=1 adds three more shots that need saved data (the focus-mode switch, and the History screen with trouble
+// spots and the times table). Make the data with make-seed.mjs and load it with a temporary local change; see
+// "Regenerating the screenshots" in the README.
+//
+// Environment: SEEDED=1, NIGHT=1 (capture in dark mode), SHOT_DIR (write somewhere other than
 // docs/screenshots), ADB (path to adb, default: platform-tools in ANDROID_HOME), ANDROID_SERIAL (device, default: the only one),
 // METRO_PORT (default 8081).
 import { execFileSync } from 'node:child_process';
@@ -28,6 +32,7 @@ const ADB = process.env.ADB || path.join(SDK, 'platform-tools', process.platform
 const SERIAL = process.env.ANDROID_SERIAL ? ['-s', process.env.ANDROID_SERIAL] : [];
 
 const adb = (...args) => execFileSync(ADB, [...SERIAL, ...args], { maxBuffer: 64 * 1024 * 1024 });
+const SEEDED = process.env.SEEDED === '1';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const shell = (...args) => adb('shell', ...args).toString();
 
@@ -96,6 +101,12 @@ const KEY_X = [0.185, 0.5, 0.813];
 const KEY_Y = [0.72, 0.79, 0.86, 0.93];
 const DIGIT_KEY = { 1: [0, 0], 2: [1, 0], 3: [2, 0], 4: [0, 1], 5: [1, 1], 6: [2, 1], 7: [0, 2], 8: [1, 2], 9: [2, 2], 0: [1, 3] };
 const NEXT = [0.741, 0.645];
+// Scrolls a screen up (towards its end) or back down, with a swipe that starts and ends away from the buttons.
+const swipe = (up, fraction = 0.55) => {
+  const [x, from] = at(0.5, up ? 0.78 : 0.22);
+  const [, to] = at(0.5, up ? 0.78 - fraction : 0.22 + fraction);
+  shell('input', 'swipe', String(x), String(from), String(x), String(to), '400');
+};
 const SKIP = [0.259, 0.645];
 
 async function typeNumber(value) {
@@ -145,11 +156,32 @@ try {
   await sleep(1000);
   shot('home');
 
+  if (SEEDED) {
+    // Before playing, so the chart shows the seeded rounds and not the 30-second one this script plays.
+    await tap('History');
+    await waitFor(/% correct/);
+    await sleep(800);
+    shot('history');
+    swipe(true, 0.6);
+    await sleep(600);
+    shot('times-table');
+    shell('input', 'keyevent', '4');
+    await waitFor('Start');
+    await sleep(500);
+  }
+
   await tap('Start');
   await tap('Times tables');
   await tap('30 sec');
   await sleep(500);
   shot('settings');
+  if (SEEDED) {
+    swipe(true);
+    await sleep(600);
+    shot('focus');
+    swipe(false);
+    await sleep(400);
+  }
 
   await tap('Start Mad Minute');
   const roundEnds = Date.now() + 30000 + 4000; // 30 second round plus the 3 second countdown
@@ -173,6 +205,7 @@ try {
   await waitFor('Results', 60000);
   await sleep(800);
   shot('results');
+
 } finally {
   await ocr.terminate();
   demoMode(false);
