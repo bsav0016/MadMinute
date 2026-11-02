@@ -1,7 +1,8 @@
 import { MadMinuteOperator } from '../MadMinuteOperator';
 import { FactStat, FactStats, TroubleSpot } from '../factStats';
+import { MadMinuteQuestion } from '../MadMinuteQuestion';
 import {
-    GRID_SIZE, cellLevel, factLabel, formatSeconds, gridFactsNeedingWork, spotDetail, timesTableGrid,
+    GRID_SIZE, cellLevel, factLabel, formatSeconds, gridFactsNeedingWork, spotDetail, timesTableGrid, worthAnotherLook,
 } from '../troubleSpots';
 
 const stat = (attempts: number, correct: number, timedCorrect = 0, correctMs = 0): FactStat =>
@@ -116,5 +117,35 @@ describe('labels', () => {
         };
         expect(spotDetail(spot)).toBe('33% right · 5.2 s');
         expect(spotDetail({ ...spot, averageMs: null, accuracy: 0 })).toBe('0% right');
+    });
+});
+
+describe('worthAnotherLook', () => {
+    const q = (id: number, a: number, b: number, response?: string, operator = MadMinuteOperator.Multiplication) =>
+        new MadMinuteQuestion(id, a, b, operator, operator === MadMinuteOperator.Multiplication ? a * b : a + b, response);
+
+    it('lists wrong answers in the order they were missed, ignoring right ones and skips', () => {
+        const questions = [q(0, 7, 8, '54'), q(1, 2, 3, '6'), q(2, 6, 9, ''), q(3, 4, 4, '15'), q(4, 5, 5)];
+        expect(worthAnotherLook(questions).map(factLabel)).toEqual(['7 × 8', '4 × 4']);
+    });
+
+    it('names a fact once, even when 7 x 8 and 8 x 7 were both missed', () => {
+        const questions = [q(0, 7, 8, '54'), q(1, 8, 7, '48'), q(2, 7, 8, '1'), q(3, 1, 1)];
+        expect(worthAnotherLook(questions)).toHaveLength(1);
+    });
+
+    it('stops at the limit', () => {
+        const questions = [2, 3, 4, 5, 6].map((n, i) => q(i, n, 7, '0')).concat(q(9, 1, 1));
+        expect(worthAnotherLook(questions)).toHaveLength(3);
+        expect(worthAnotherLook(questions, 5)).toHaveLength(5);
+    });
+
+    it('leaves out the last question, which was never attempted', () => {
+        expect(worthAnotherLook([q(0, 7, 8, '54')])).toEqual([]);
+        expect(worthAnotherLook([])).toEqual([]);
+    });
+
+    it('is empty when nothing was missed', () => {
+        expect(worthAnotherLook([q(0, 2, 3, '6'), q(1, 4, 5, ''), q(2, 1, 1)])).toEqual([]);
     });
 });

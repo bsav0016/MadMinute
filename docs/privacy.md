@@ -4,15 +4,15 @@ title: Math Mad Minute Privacy Policy
 
 # Math Mad Minute Privacy Policy
 
-**Effective date:** 28 October 2026
+**Effective date:** 2 November 2026
 
 Math Mad Minute does not collect or share any personal or non-personal data about its users.
 
 ## What stays on your device
 
-To show your progress, the app saves your settings and a short history of your finished rounds (scores, the operations and round length you used, and when you played) on your own device. This information never leaves your device, and we cannot see it.
+To show your progress, the app saves your settings, a short history of your finished rounds (scores, the operations and round length you used, and when you played), and a small record of each problem you have answered (how often you got it right and how long correct answers took) on your own device. The app uses the per-problem record to show your trouble spots and times table, and, if you turn it on, to ask more of the problems you find hard. This information never leaves your device, and we cannot see it.
 
-You can delete it at any time with "Clear all history" in the app, or by uninstalling the app.
+You can delete all of it at any time with "Clear all history" in the app, or by uninstalling the app.
 
 ## Third-party services
 
