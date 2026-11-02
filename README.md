@@ -10,7 +10,7 @@ A timed arithmetic drill is slow to set up by hand: someone has to write the que
 
 ## How it works
 
-1. **Settings** – start from a quick preset (Easy +/−, Times tables, Mixed) or set it up yourself: turn addition, subtraction, multiplication and division on or off, set the smallest and largest numbers with a two-handle slider (defaults: addition only, 0 to 20), and pick a 30, 60 or 120 second round.
+1. **Settings** – start from a quick preset (Easy +/−, Times tables, Mixed) or set it up yourself: turn addition, subtraction, multiplication and division on or off, set the smallest and largest numbers with a two-handle slider (defaults: addition only, 0 to 20), and pick a 30, 60 or 120 second round. Once you have answered 50 questions, a **Focus on my weak spots** switch (off by default) makes about half the questions your trouble spots, within the range and operations you chose.
 2. **Play** – a 3-second countdown, then your chosen round length (60 seconds by default). Questions are generated from your settings; tap in an answer on the built-in number pad and submit to get the next one.
 3. **Results** – correct, incorrect and skipped counts, an overall score such as `18/22`, a review of each question, and a "New personal best!" badge (with your previous best) when you beat your earlier score for the same operations and round length.
 4. **History** – opened from the home screen: your overall accuracy, a bar chart of your last 10 rounds, accuracy for each operation, **trouble spots** (the five problems you miss or answer slowly, such as 7 × 8, with how often you get them right and your average time), a **times table** grid from 1 × 1 to 12 × 12 coloured by how well you know each fact, and your best score for each setup, with a button to clear it all. The app keeps a small record of every problem you have answered, on your device only, to build these.
@@ -58,7 +58,7 @@ It opens the app in Expo Go, turns on Android demo mode for a clean status bar, 
 
 ## Limitations
 
-- Tests cover question generation (operators, ranges, subtraction and division edge cases), the results tally (correct, incorrect and skipped, and why the unanswered last question is not counted), the settings presets and operator display symbols, saving and loading settings, building and capping round records (including saving a round only once), personal bests, the history statistics, the per-problem record (keys, decay, weakness, validated storage, recording once per round and clearing with the history), answer timing and the no-repeat rule, and the History screen's trouble spots and times table. The number pad and the play screen have their own tests; the other screens are not tested.
+- Tests cover question generation (operators, ranges, subtraction and division edge cases), the results tally (correct, incorrect and skipped, and why the unanswered last question is not counted), the settings presets and operator display symbols, saving and loading settings (including focus mode), the weak-spot draw in focus mode (which facts qualify, the 50% mix, the settings switch), building and capping round records (including saving a round only once), personal bests, the history statistics, the per-problem record (keys, decay, weakness, validated storage, recording once per round and clearing with the history), answer timing and the no-repeat rule, and the History screen's trouble spots and times table. The number pad and the play screen have their own tests; the other screens are not tested.
 
 ## License
 

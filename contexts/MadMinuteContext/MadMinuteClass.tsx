@@ -1,6 +1,8 @@
 import { MadMinuteSettings } from "./MadMinuteSettings";
 import { MadMinuteQuestion, isSameFact } from "./MadMinuteQuestion";
 import { MadMinuteOperator } from "./MadMinuteOperator";
+import { FOCUS_SHARE, questionForFact } from "./focus";
+import { ParsedFact } from "./factStats";
 import { getFirstDivisionInt, getRandomInt, getSecondDivisionInt, getSubtractionInt } from "./randomIntUtils";
 
 // How many times to draw again when the draw repeats the previous question. A range with only one possible question
@@ -19,18 +21,25 @@ export class MadMinuteClass {
         this.questions = questions
     }
 
-    /** The next question. It is never the same fact as the one before it unless no other question is possible. */
-    generateNewQuestion(now: number = Date.now()): MadMinuteQuestion {
+    /** The next question. It is never the same fact as the one before it unless no other question is possible.
+     *  `weakSpots` (from focusPool) are facts to ask more often: about half the questions come from them when given. */
+    generateNewQuestion(
+        now: number = Date.now(), weakSpots: ParsedFact[] = [], random: () => number = Math.random
+    ): MadMinuteQuestion {
         const previous = this.questions.at(-1);
-        let question = this.drawQuestion(now);
+        let question = this.drawQuestion(now, weakSpots, random);
         for (let tries = 1; previous && isSameFact(previous, question) && tries < MAX_REDRAWS; tries++) {
-            question = this.drawQuestion(now);
+            question = this.drawQuestion(now, weakSpots, random);
         }
         return question;
     }
 
-    private drawQuestion(now: number): MadMinuteQuestion {
+    private drawQuestion(now: number, weakSpots: ParsedFact[], random: () => number): MadMinuteQuestion {
         const id = this.questions.length;
+
+        if (weakSpots.length > 0 && random() < FOCUS_SHARE) {
+            return questionForFact(weakSpots[Math.floor(random() * weakSpots.length)], id, now, random);
+        }
 
         const operatorIndex = 
             Math.floor(Math.random() * this.settings.availableOperators.length);

@@ -15,6 +15,12 @@ describe('parseSettings', () => {
         expect(settings).toEqual(new MadMinuteSettings(1, 12, [MadMinuteOperator.Multiplication, MadMinuteOperator.Division], 120));
     });
 
+    it('reads focus mode, and treats a missing or odd value as off', () => {
+        expect(parseSettings({ ...valid(), focusOnWeakSpots: true })?.focusOnWeakSpots).toBe(true);
+        expect(parseSettings(valid())?.focusOnWeakSpots).toBe(false);
+        expect(parseSettings({ ...valid(), focusOnWeakSpots: 'yes' })?.focusOnWeakSpots).toBe(false);
+    });
+
     it('drops duplicate operators', () => {
         expect(parseSettings({ ...valid(), availableOperators: ['+', '+'] })?.availableOperators).toEqual(['+']);
     });
@@ -45,6 +51,12 @@ describe('loadSettings / saveSettings', () => {
         const settings = new MadMinuteSettings(2, 15, [MadMinuteOperator.Addition, MadMinuteOperator.Subtraction], 30);
         await saveSettings(settings);
         expect(await loadSettings()).toEqual(settings);
+    });
+
+    it('round-trips focus mode', async () => {
+        const settings = new MadMinuteSettings(1, 12, [MadMinuteOperator.Multiplication], 60, true);
+        await saveSettings(settings);
+        expect((await loadSettings())?.focusOnWeakSpots).toBe(true);
     });
 
     it('returns null when nothing is saved or the saved value is corrupt', async () => {

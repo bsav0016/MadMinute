@@ -10,7 +10,7 @@ const SLIDER_MAX = 20;
 // Turns saved data back into settings, or null if any part of it is not something the settings screen could produce.
 export function parseSettings(data: unknown): MadMinuteSettings | null {
     if (data === null || typeof data !== "object") return null;
-    const { minValue, maxValue, availableOperators, durationSeconds } = data as Record<string, unknown>;
+    const { minValue, maxValue, availableOperators, durationSeconds, focusOnWeakSpots } = data as Record<string, unknown>;
 
     if (!Number.isInteger(minValue) || !Number.isInteger(maxValue)) return null;
     const min = minValue as number;
@@ -27,7 +27,9 @@ export function parseSettings(data: unknown): MadMinuteSettings | null {
         min,
         max,
         Array.from(new Set(availableOperators)) as MadMinuteOperator[],
-        durationSeconds
+        durationSeconds,
+        // Settings saved before this existed have no value, and anything but true means off.
+        focusOnWeakSpots === true
     );
 }
 
@@ -41,5 +43,6 @@ export function saveSettings(settings: MadMinuteSettings): Promise<boolean> {
         maxValue: settings.maxValue,
         availableOperators: settings.availableOperators,
         durationSeconds: settings.durationSeconds,
+        focusOnWeakSpots: settings.focusOnWeakSpots,
     });
 }
