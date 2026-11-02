@@ -1,5 +1,6 @@
 import { displayOperator, MadMinuteOperator } from "./MadMinuteOperator";
-import { factKey, FactStats, MIN_ATTEMPTS_TO_JUDGE, overallAverageMs, ParsedFact, TROUBLE_THRESHOLD, TroubleSpot, weakness } from "./factStats";
+import { MadMinuteQuestion } from "./MadMinuteQuestion";
+import { factKey, factKeyOf, FactStats, MIN_ATTEMPTS_TO_JUDGE, overallAverageMs, ParsedFact, TROUBLE_THRESHOLD, TroubleSpot, weakness } from "./factStats";
 
 // What the History screen shows about the per-fact record: a label for each trouble spot and a times-table grid.
 
@@ -68,4 +69,23 @@ export function spotDetail(spot: TroubleSpot): string {
     const percent = `${Math.round(spot.accuracy * 100)}% right`;
     const seconds = formatSeconds(spot.averageMs);
     return seconds ? `${percent} · ${seconds}` : percent;
+}
+
+/** How many missed facts the results screen names. */
+export const WORTH_A_LOOK_SHOWN = 3;
+
+/** The facts answered wrongly in a round, first miss first, each once. Skipped questions are not misses, and the
+ *  last question is left out because it was on screen when time ran out and never attempted. */
+export function worthAnotherLook(questions: MadMinuteQuestion[], limit: number = WORTH_A_LOOK_SHOWN): ParsedFact[] {
+    const seen = new Set<string>();
+    const facts: ParsedFact[] = [];
+    for (const question of questions.slice(0, -1)) {
+        if (!question.response || String(question.answer) === question.response) continue;
+        const key = factKeyOf(question);
+        if (seen.has(key)) continue;
+        seen.add(key);
+        facts.push({ operator: question.operator, value1: question.value1, value2: question.value2 });
+        if (facts.length === limit) break;
+    }
+    return facts;
 }

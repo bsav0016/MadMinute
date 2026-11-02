@@ -6,6 +6,7 @@ import { Colors } from "@/constants/Colors";
 import { useMadMinute } from "@/contexts/MadMinuteContext/MadMinuteContext";
 import { getResponseResults } from "@/contexts/MadMinuteContext/responseResults";
 import { displayOperator } from "@/contexts/MadMinuteContext/MadMinuteOperator";
+import { factLabel, worthAnotherLook } from "@/contexts/MadMinuteContext/troubleSpots";
 import { getBestInfo, scoreText } from "@/contexts/MadMinuteContext/personalBest";
 import { RoundRecord } from "@/contexts/MadMinuteContext/roundRecord";
 import { useRouteTo } from "@/contexts/RouteContext";
@@ -77,6 +78,7 @@ export default function Results() {
     const {correct, incorrect, skipped} = getResponseResults(madMinute.questions)
 
     const attempted = correct + incorrect + skipped;
+    const toRevisit = worthAnotherLook(madMinute.questions);
     const accuracy = attempted === 0 ? 0 : Math.round((correct / attempted) * 100);
 
     const displayFields = [
@@ -109,6 +111,12 @@ export default function Results() {
                 {displayFields.map((field) => (
                     <ThemedText type="default" key={field.text} style={{ color: muted }}>{field.text}: {field.value}</ThemedText>
                 ))}
+
+                {toRevisit.length > 0 && (
+                    <ThemedText type="default" style={[styles.revisitText, { color: muted }]}>
+                        Worth another look: {toRevisit.map(factLabel).join(", ")}
+                    </ThemedText>
+                )}
 
             </ThemedView>
             <QuestionResult 
@@ -160,6 +168,12 @@ const styles = StyleSheet.create({
         color: Colors.button.text,
         fontWeight: '700',
         fontSize: 15,
+    },
+
+    revisitText: {
+        marginTop: 6,
+        paddingHorizontal: 16,
+        textAlign: 'center',
     },
 
     scoreText: {
