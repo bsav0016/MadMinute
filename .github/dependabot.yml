@@ -8,6 +8,25 @@ updates:
       npm-dependencies:
         patterns:
           - "*"
+    ignore:
+      # Expo SDK 58 pins exact versions of these; `npx expo install --check` rejects other versions.
+      - dependency-name: react
+      - dependency-name: react-dom
+      - dependency-name: react-test-renderer
+      - dependency-name: react-native-worklets
+      - dependency-name: react-native-safe-area-context
+      # Majors the current toolchain cannot take yet (revisit with the next Expo SDK):
+      # typescript 7 crashes typescript-eslint, eslint 10 is unsupported by eslint-config-expo,
+      # @babel/core 8 is untested with babel-preset-expo / jest-expo, and async-storage 3 drops
+      # the jest mock path the tests import.
+      - dependency-name: typescript
+        update-types: ["version-update:semver-major"]
+      - dependency-name: eslint
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@babel/core"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@react-native-async-storage/async-storage"
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: github-actions
     directory: /
     schedule:
