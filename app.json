@@ -15,7 +15,7 @@
       "bundleIdentifier": "com.bsav0016.MadMinute"
     },
     "android": {
-      "package": "com.bsav0016.MathMadMinute",
+      "package": "com.bsav0016.MadMinute",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundImage": "./assets/images/adaptive-icon-background.png",
