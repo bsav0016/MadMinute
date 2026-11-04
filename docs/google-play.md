@@ -8,7 +8,7 @@ Store builds stay manual. These are the answers and text to use in Play Console.
 eas build --platform android --profile production   # produces an .aab
 ```
 
-- Application ID: `com.bsav0016.MadMinute` (set in `app.json`; it cannot be changed after the first upload).
+- Application ID: `com.bsav0016.MathMadMinute` (set in `app.json`; it cannot be changed after the first upload).
 - `versionCode` is managed by EAS (`appVersionSource: remote`, `autoIncrement: true`).
 - Upload the first `.aab` by hand in Play Console (Production, or Internal testing first). `eas submit` only works after a first manual upload and a service-account key.
 - Let Play manage app signing (the default); EAS holds the upload key.
