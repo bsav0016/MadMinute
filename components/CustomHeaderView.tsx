@@ -32,13 +32,13 @@ export function CustomHeaderView({
         <ThemedView style={[styles.screenView, style]}>
             <ThemedView style={styles.headerView}>
                 {canGoBack &&
-                    <TouchableOpacity onPress={handleBackPress} style={styles.backButton}>
+                    <TouchableOpacity onPress={handleBackPress} style={styles.backButton} accessibilityRole="button" accessibilityLabel="Back">
                         <Ionicons name="arrow-back" size={22} color={Colors.button.text} />
                         <ThemedText style={styles.backText}>Back</ThemedText>
                     </TouchableOpacity>
                 }
 
-                <ThemedText style={[styles.headerText, canGoBack && styles.headerTextWithBack]}>
+                <ThemedText accessibilityRole="header" style={[styles.headerText, canGoBack && styles.headerTextWithBack]}>
                     {header}
                 </ThemedText>
             </ThemedView>

@@ -1,7 +1,7 @@
 import React from "react";
 import { ThemedView } from "./ThemedView";
 import { MadMinuteQuestion } from "@/contexts/MadMinuteContext/MadMinuteQuestion";
-import { displayOperator } from "@/contexts/MadMinuteContext/MadMinuteOperator";
+import { displayOperator, spokenQuestion } from "@/contexts/MadMinuteContext/MadMinuteOperator";
 import { StyleSheet } from "react-native";
 import { ThemedText } from "./ThemedText";
 import { useThemeColor } from "@/hooks/useThemeColor";
@@ -14,7 +14,11 @@ export function FormattedQuestion({question}: FormattedQuestionProps) {
     const ruleColor = useThemeColor({}, 'text');
 
     return (
-        <ThemedView style={[styles.questionContainer, { borderBottomColor: ruleColor }]}>
+        <ThemedView
+            style={[styles.questionContainer, { borderBottomColor: ruleColor }]}
+            accessible
+            accessibilityLabel={spokenQuestion(question.value1, question.operator, question.value2)}
+        >
             <ThemedView style={styles.line1Container}>
                 <ThemedText type="subtitle" style={styles.valueText}>{question.value1}</ThemedText>
             </ThemedView>

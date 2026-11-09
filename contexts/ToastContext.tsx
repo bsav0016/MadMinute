@@ -1,5 +1,5 @@
 import React, { createContext, useState, useCallback, useRef, ReactNode } from "react";
-import { StyleSheet, TouchableOpacity } from "react-native";
+import { AccessibilityInfo, StyleSheet, TouchableOpacity } from "react-native";
 import { ThemedView } from "@/components/ThemedView";
 import { ThemedText } from "@/components/ThemedText";
 
@@ -36,6 +36,8 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
     ) => {
       const id = Date.now();
       setToasts((prevToasts) => [...prevToasts, { id, message, actions }]);
+      // The toast appears over the screen without moving focus, so a screen reader has to be told about it.
+      AccessibilityInfo.announceForAccessibility?.(message);
     },
     []
   );
@@ -51,13 +53,15 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
       {children}
       {toasts.length > 0 && <ThemedView style={styles.toastOverlay} />}
       {toasts.map((toast) => (
-        <ThemedView key={toast.id} style={styles.toastContainer}>
-          <ThemedText style={styles.toastContainerLabel}>{toast.message}</ThemedText>
+        <ThemedView key={toast.id} style={styles.toastContainer} accessibilityViewIsModal>
+          <ThemedText style={styles.toastContainerLabel} accessibilityRole="alert">{toast.message}</ThemedText>
           <ThemedView style={[styles.buttonContainer, { flexDirection: toast.actions.length > 1 ? 'column' : 'row' }]}>
             {toast.actions.map((action, index) => (
               <TouchableOpacity
                 key={index}
                 style={styles.boldButton}
+                accessibilityRole="button"
+                accessibilityLabel={action.label}
                 onPress={() => {
                   action.callback();
                   removeToast(toast.id);
@@ -69,6 +73,8 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
             <TouchableOpacity
               style={styles.dimButton}
               onPress={() => removeToast(toast.id)}
+              accessibilityRole="button"
+              accessibilityLabel="Cancel"
             >
               <ThemedText style={styles.dimButtonText}>Cancel</ThemedText>
             </TouchableOpacity>
