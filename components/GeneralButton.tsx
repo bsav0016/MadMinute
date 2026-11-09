@@ -30,6 +30,9 @@ export function GeneralButton({ title, onPress, disabled=false, autoWidth=true, 
       ]}
       onPress={onPress}
       disabled={disabled}
+      accessibilityRole="button"
+      accessibilityLabel={title}
+      accessibilityState={{ disabled }}
       activeOpacity={0.8}
     >
       <Text style={[styles.buttonText, { fontSize: fontSize }, secondary && { color: tint }]}>{title}</Text>

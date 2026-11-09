@@ -16,3 +16,21 @@ export function displayOperator(operator: MadMinuteOperator): string {
             return operator;
     }
 }
+
+// Screen readers say "−" and "×" unreliably (or not at all), so spoken text spells the operators out.
+export function spokenOperator(operator: MadMinuteOperator): string {
+    switch (operator) {
+        case MadMinuteOperator.Addition:
+            return "plus";
+        case MadMinuteOperator.Subtraction:
+            return "minus";
+        case MadMinuteOperator.Multiplication:
+            return "times";
+        default:
+            return "divided by";
+    }
+}
+
+export function spokenQuestion(value1: number, operator: MadMinuteOperator, value2: number): string {
+    return `${value1} ${spokenOperator(operator)} ${value2}`;
+}

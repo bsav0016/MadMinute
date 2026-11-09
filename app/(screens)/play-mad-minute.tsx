@@ -97,16 +97,21 @@ export default function PlayMadMinute() {
         <>
             {timeRemaining > roundSeconds ?
             <ThemedView style={styles.countdownContainer}>
-                <ThemedText type="countdown">{timeRemaining - roundSeconds}</ThemedText>
+                <ThemedText type="countdown" accessibilityLabel={`Starting in ${timeRemaining - roundSeconds}`}>{timeRemaining - roundSeconds}</ThemedText>
             </ThemedView>
             :
             <View style={styles.screenView}>
                 <CustomHeaderView header="Mad Minute" canGoBack={true}>
                     <ThemedView style={styles.timeRemainingContainer}>
-                        <ThemedView style={[styles.timePill, { backgroundColor: surface, borderColor: border }]}>
+                        <ThemedView
+                            style={[styles.timePill, { backgroundColor: surface, borderColor: border }]}
+                            accessible
+                            accessibilityRole="timer"
+                            accessibilityLabel={`Time remaining, ${timeRemaining} ${timeRemaining === 1 ? "second" : "seconds"}`}
+                        >
                             <ThemedText style={[styles.timeText, { backgroundColor: 'transparent', color: lowOnTime ? timerColor : color }]}>Time: {timeRemaining}</ThemedText>
                         </ThemedView>
-                        <View style={[styles.timeTrack, { backgroundColor: border }]}>
+                        <View style={[styles.timeTrack, { backgroundColor: border }]} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
                             <View style={[styles.timeFill, { backgroundColor: timerColor, width: `${Math.min(timeRemaining / roundSeconds, 1) * 100}%` }]} />
                         </View>
                     </ThemedView>
@@ -115,7 +120,12 @@ export default function PlayMadMinute() {
                             <ThemedView style={[styles.questionCard, { backgroundColor: surface, borderColor: border }]}>
                                 <FormattedQuestion question={currentQuestion} />
                             </ThemedView>
-                            <View style={[styles.input, { borderColor: tint, backgroundColor: surface }]}>
+                            <View
+                                style={[styles.input, { borderColor: tint, backgroundColor: surface }]}
+                                accessible
+                                accessibilityLabel="Your answer"
+                                accessibilityValue={{ text: response === '' ? 'empty' : response }}
+                            >
                                 <Text style={[styles.inputText, { color: color }]}>{response}</Text>
                             </View>
                         </ThemedView>

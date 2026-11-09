@@ -109,6 +109,9 @@ export default function CreateMadMinute() {
             ]}
             onPress={onPress}
             activeOpacity={0.7}
+            accessibilityRole="radio"
+            accessibilityLabel={label}
+            accessibilityState={{ selected }}
         >
             <Text style={[styles.chipText, { color: selected ? Colors.button.text : text }]}>{label}</Text>
         </TouchableOpacity>
@@ -169,6 +172,7 @@ export default function CreateMadMinute() {
                             <Switch
                                 value={localSettings.availableOperators.includes(displayOperator.value)}
                                 onValueChange={() => toggleOperator(displayOperator.value)}
+                                accessibilityLabel={displayOperator.text}
                                 thumbColor={localSettings.availableOperators.includes(displayOperator.value) ? Colors.button.background : '#ccc'}
                                 trackColor={{ false: '#ddd', true: '#b9c4f7' }}
                             />

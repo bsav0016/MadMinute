@@ -24,7 +24,7 @@ export default function HomeScreen() {
   return (
     <ThemedView style={styles.homeView}>
       <ThemedView style={styles.titleContainer}>
-        <ThemedText type='title'>
+        <ThemedText type='title' accessibilityRole="header">
           Mad Minute
         </ThemedText>
         <ThemedText style={[styles.tagline, { color: muted }]}>
@@ -32,7 +32,11 @@ export default function HomeScreen() {
         </ThemedText>
       </ThemedView>
 
-      <ThemedView style={[styles.sampleCard, { backgroundColor: surface, borderColor: border }]}>
+      <ThemedView
+        style={[styles.sampleCard, { backgroundColor: surface, borderColor: border }]}
+        accessible
+        accessibilityLabel="Example question: 7 times 8"
+      >
         <ThemedText style={[styles.sampleText, { color: tint }]}>7 × 8 = ?</ThemedText>
       </ThemedView>
 
@@ -49,7 +53,7 @@ export default function HomeScreen() {
         }
       </ThemedView>
 
-      <TouchableOpacity onPress={() => Linking.openURL(PRIVACY_POLICY_URL).catch(() => {})}>
+      <TouchableOpacity onPress={() => Linking.openURL(PRIVACY_POLICY_URL).catch(() => {})} accessibilityRole="link" accessibilityLabel="Privacy Policy">
         <ThemedText style={[styles.privacyLink, { color: muted }]}>Privacy Policy</ThemedText>
       </TouchableOpacity>
     </ThemedView>
