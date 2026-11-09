@@ -15,6 +15,15 @@ import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { Routes } from "@/constants/Routes";
 import { useThemeColor } from "@/hooks/useThemeColor";
 
+type Outcome = "correct" | "incorrect" | "skipped";
+
+// Colour is never the only signal: each outcome also has a mark and a word.
+const OUTCOMES: Record<Outcome, { mark: string; word: string }> = {
+    correct: { mark: "✓", word: "Correct" },
+    incorrect: { mark: "✗", word: "Incorrect" },
+    skipped: { mark: "–", word: "Skipped" },
+};
+
 interface QuestionResultProps {
     question: string;
     answer: string;
@@ -40,9 +49,20 @@ const QuestionResult = ({question, answer, response, header=false}: QuestionResu
     }
 
     const textColor = header ? themedText : '#111827';
+    const outcome: Outcome = !response ? "skipped" : answer === response ? "correct" : "incorrect";
+    const label = header
+        ? undefined
+        : `${question}. Correct answer ${answer}. ${response ? `Your response ${response}` : "No response"}. ${OUTCOMES[outcome].word}.`;
 
     return (
-        <ThemedView style={[styles.resultContainer, header && styles.headerRow, {backgroundColor: backgroundColor}]}>
+        <ThemedView
+            style={[styles.resultContainer, header && styles.headerRow, {backgroundColor: backgroundColor}]}
+            accessible={!header}
+            accessibilityLabel={label}
+        >
+            <View style={styles.markContainer}>
+                {!header && <Text style={[styles.resultsText, { color: textColor }]}>{OUTCOMES[outcome].mark}</Text>}
+            </View>
             <View style={styles.questionLabelContainer}>
                 <Text style={[styles.resultsText, header && styles.headerText, { color: textColor }]}>{question}</Text>
             </View>
@@ -197,6 +217,12 @@ const styles = StyleSheet.create({
     headerText: {
         fontSize: 15,
         opacity: 0.7,
+    },
+
+    markContainer: {
+        width: 24,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
 
     questionLabelContainer: {
