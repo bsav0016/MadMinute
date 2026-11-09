@@ -20,14 +20,14 @@ export function FormattedQuestion({question}: FormattedQuestionProps) {
             accessibilityLabel={spokenQuestion(question.value1, question.operator, question.value2)}
         >
             <ThemedView style={styles.line1Container}>
-                <ThemedText type="subtitle" style={styles.valueText}>{question.value1}</ThemedText>
+                <ThemedText type="subtitle" maxFontSizeMultiplier={1.3} style={styles.valueText}>{question.value1}</ThemedText>
             </ThemedView>
             <ThemedView style={styles.line2Container}>
                 <ThemedView style={styles.operatorContainer}>
-                    <ThemedText type="subtitle" style={styles.operatorText}>{displayOperator(question.operator)}</ThemedText>
+                    <ThemedText type="subtitle" maxFontSizeMultiplier={1.3} style={styles.operatorText}>{displayOperator(question.operator)}</ThemedText>
                 </ThemedView>
                 <ThemedView style={styles.value2Container}>
-                    <ThemedText type="subtitle" style={styles.valueText}>{question.value2}</ThemedText>
+                    <ThemedText type="subtitle" maxFontSizeMultiplier={1.3} style={styles.valueText}>{question.value2}</ThemedText>
                 </ThemedView>
             </ThemedView>
         </ThemedView>
@@ -36,7 +36,7 @@ export function FormattedQuestion({question}: FormattedQuestionProps) {
 
 const styles = StyleSheet.create({
     questionContainer: {
-        width: 120,
+        minWidth: 120,
         borderBottomWidth: 4,
         backgroundColor: 'transparent',
     },

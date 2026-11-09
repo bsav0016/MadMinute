@@ -59,7 +59,7 @@ const styles = StyleSheet.create({
 
     headerView: {
         width: '100%',
-        height: 64,
+        minHeight: 64,
         justifyContent: 'center',
         flexDirection: 'row',
         alignItems: 'center',
@@ -75,7 +75,7 @@ const styles = StyleSheet.create({
         justifyContent: "center",
         alignItems: "center",
         width: 'auto',
-        height: 36,
+        minHeight: 36,
         paddingLeft: 8,
         paddingRight: 14,
         borderRadius: 18

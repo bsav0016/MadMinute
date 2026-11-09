@@ -220,7 +220,7 @@ const styles = StyleSheet.create({
     },
 
     markContainer: {
-        width: 24,
+        minWidth: 24,
         alignItems: 'center',
         justifyContent: 'center',
     },

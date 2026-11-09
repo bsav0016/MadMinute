@@ -38,7 +38,7 @@ export function NumberPad({ onDigit, onBackspace, onClear }: NumberPadProps) {
                     {row.map((digit) => (
                         <TouchableOpacity key={digit} style={keyStyle} onPress={press(() => onDigit(digit))} activeOpacity={0.6}
                             accessibilityRole="button" accessibilityLabel={digit}>
-                            <Text style={[styles.keyText, { color: text }]}>{digit}</Text>
+                            <Text maxFontSizeMultiplier={1.3} style={[styles.keyText, { color: text }]}>{digit}</Text>
                         </TouchableOpacity>
                     ))}
                 </View>
@@ -50,7 +50,7 @@ export function NumberPad({ onDigit, onBackspace, onClear }: NumberPadProps) {
                 </TouchableOpacity>
                 <TouchableOpacity style={keyStyle} onPress={press(() => onDigit("0"))} activeOpacity={0.6}
                     accessibilityRole="button" accessibilityLabel="0">
-                    <Text style={[styles.keyText, { color: text }]}>0</Text>
+                    <Text maxFontSizeMultiplier={1.3} style={[styles.keyText, { color: text }]}>0</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={keyStyle} onPress={press(onBackspace)} activeOpacity={0.6}
                     accessibilityRole="button" accessibilityLabel="Delete last digit">
@@ -74,7 +74,7 @@ const styles = StyleSheet.create({
     },
     key: {
         flex: 1,
-        height: 56,
+        minHeight: 56,
         borderRadius: 14,
         borderWidth: 1,
         alignItems: 'center',

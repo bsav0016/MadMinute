@@ -17,8 +17,12 @@ export function ThemedText({
 }: ThemedTextProps) {
   const color = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
 
+  // Large display text is capped so it can't outgrow the screen; everything else follows the system text size.
+  const maxFontSizeMultiplier = type === 'countdown' ? 1.2 : type === 'title' ? 1.4 : undefined;
+
   return (
     <Text
+      maxFontSizeMultiplier={maxFontSizeMultiplier}
       style={[
         { color },
         type === 'default' ? styles.default : undefined,

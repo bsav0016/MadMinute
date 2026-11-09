@@ -216,7 +216,7 @@ const styles = StyleSheet.create({
     },
 
     rowLabel: {
-        width: 24,
+        minWidth: 24,
         fontSize: 20,
         textAlign: 'center',
     },
@@ -238,7 +238,7 @@ const styles = StyleSheet.create({
     },
 
     rowValue: {
-        width: 48,
+        minWidth: 48,
         textAlign: 'right',
     },
 

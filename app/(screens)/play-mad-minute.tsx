@@ -109,7 +109,7 @@ export default function PlayMadMinute() {
                             accessibilityRole="timer"
                             accessibilityLabel={`Time remaining, ${timeRemaining} ${timeRemaining === 1 ? "second" : "seconds"}`}
                         >
-                            <ThemedText style={[styles.timeText, { backgroundColor: 'transparent', color: lowOnTime ? timerColor : color }]}>Time: {timeRemaining}</ThemedText>
+                            <ThemedText maxFontSizeMultiplier={1.3} style={[styles.timeText, { backgroundColor: 'transparent', color: lowOnTime ? timerColor : color }]}>Time: {timeRemaining}</ThemedText>
                         </ThemedView>
                         <View style={[styles.timeTrack, { backgroundColor: border }]} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
                             <View style={[styles.timeFill, { backgroundColor: timerColor, width: `${Math.min(timeRemaining / roundSeconds, 1) * 100}%` }]} />
@@ -126,7 +126,7 @@ export default function PlayMadMinute() {
                                 accessibilityLabel="Your answer"
                                 accessibilityValue={{ text: response === '' ? 'empty' : response }}
                             >
-                                <Text style={[styles.inputText, { color: color }]}>{response}</Text>
+                                <Text maxFontSizeMultiplier={1.3} style={[styles.inputText, { color: color }]}>{response}</Text>
                             </View>
                         </ThemedView>
                     }
@@ -215,7 +215,7 @@ const styles = StyleSheet.create({
     input: {
         fontSize: 32,
         minWidth: 160,
-        height: 58,
+        minHeight: 58,
         borderWidth: 2,
         borderRadius: 16,
         alignItems: 'center',

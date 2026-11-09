@@ -187,3 +187,25 @@ describe('the play screen', () => {
         jest.restoreAllMocks();
     });
 });
+
+describe('large text on the play screen', () => {
+    beforeEach(async () => { await AsyncStorage.clear(); });
+
+    it('caps the big display text and lets boxes grow instead of clipping', async () => {
+        jest.useFakeTimers();
+        const tree = await render(<MadMinuteProvider><PlayMadMinute /></MadMinuteProvider>);
+        await act(async () => { jest.advanceTimersByTime(4500); });
+        const texts = tree.root.findAllByType(Text);
+        const uncapped = texts.filter((t) => {
+            const flat = Object.assign({}, ...[t.props.style].flat(5).filter(Boolean));
+            return flat.fontSize >= 26 && !t.props.maxFontSizeMultiplier;
+        });
+        expect(uncapped.map(textOf)).toEqual([]);
+        const fixedHeights = tree.root.findAll((n) => {
+            const flat = Object.assign({}, ...[n.props.style].flat(5).filter(Boolean));
+            return typeof n.type === 'string' && typeof flat.height === 'number' && flat.height >= 40;
+        });
+        expect(fixedHeights).toEqual([]);
+        jest.useRealTimers();
+    });
+});
