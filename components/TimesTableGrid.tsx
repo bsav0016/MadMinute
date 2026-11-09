@@ -6,6 +6,15 @@ import { StyleSheet, Text, View } from "react-native";
 
 // The multiplication table coloured by how well each fact is known. Plain Views, like the trend bars on the History
 // screen. The cells carry no labels of their own: a screen reader gets one summary for the whole grid.
+// Colour is never the only signal: each level also has a mark, in a colour that reads on its fill (4.5:1 or better).
+export const CELL_MARKS: Record<CellLevel, { mark: string; markColor: string }> = {
+    unseen: { mark: "", markColor: '#111827' },
+    solid: { mark: "✓", markColor: '#111827' },
+    ok: { mark: "•", markColor: '#111827' },
+    trouble: { mark: "!", markColor: '#111827' },
+    bad: { mark: "✗", markColor: '#ffffff' },
+};
+
 export function TimesTableGrid({ grid }: { grid: GridCell[][] }) {
     const border = useThemeColor({}, 'border');
     const muted = useThemeColor({}, 'muted');
@@ -40,7 +49,9 @@ export function TimesTableGrid({ grid }: { grid: GridCell[][] }) {
                     </View>
                     {cells.map((cell) => (
                         <View key={cell.col} style={styles.cell}>
-                            <View style={[styles.fill, { backgroundColor: colors[cell.level] }]} />
+                            <View style={[styles.fill, { backgroundColor: colors[cell.level] }]}>
+                                <Text style={[styles.mark, { color: CELL_MARKS[cell.level].markColor }]}>{CELL_MARKS[cell.level].mark}</Text>
+                            </View>
                         </View>
                     ))}
                 </View>
@@ -48,7 +59,9 @@ export function TimesTableGrid({ grid }: { grid: GridCell[][] }) {
             <View style={styles.legend}>
                 {([["solid", "Quick and right"], ["ok", "Fine"], ["trouble", "Needs work"], ["bad", "Often missed"], ["unseen", "Not enough yet"]] as [CellLevel, string][]).map(([level, label]) => (
                     <View key={level} style={styles.legendItem}>
-                        <View style={[styles.swatch, { backgroundColor: colors[level] }]} />
+                        <View style={[styles.swatch, { backgroundColor: colors[level] }]}>
+                            <Text style={[styles.swatchMark, { color: CELL_MARKS[level].markColor }]}>{CELL_MARKS[level].mark}</Text>
+                        </View>
                         <Text style={[styles.legendText, { color: muted }]}>{label}</Text>
                     </View>
                 ))}
@@ -78,6 +91,18 @@ const styles = StyleSheet.create({
         width: '100%',
         height: '100%',
         borderRadius: 3,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+
+    mark: {
+        fontSize: 11,
+        fontWeight: '700',
+    },
+
+    swatchMark: {
+        fontSize: 9,
+        fontWeight: '700',
     },
 
     header: {
@@ -98,9 +123,11 @@ const styles = StyleSheet.create({
     },
 
     swatch: {
-        width: 10,
-        height: 10,
+        width: 14,
+        height: 14,
         borderRadius: 3,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
 
     legendText: {
