@@ -13,6 +13,7 @@ jest.mock('@/contexts/MadMinuteContext/MadMinuteContext', () => ({
     useMadMinute: () => ({ madMinute: mockGame, resetMadMinute: jest.fn(), recordRound: () => null, history: [] }),
 }));
 jest.mock('@expo/vector-icons', () => ({ Ionicons: () => null }));
+jest.mock('@/contexts/MadMinuteContext/reviewPrompt', () => ({ maybeRequestReview: jest.fn() }));
 jest.mock('expo-router', () => ({ useRouter: () => ({ back: jest.fn() }) }));
 jest.mock('@/contexts/RouteContext', () => ({ useRouteTo: () => ({ routeBack: jest.fn(), routeReplace: jest.fn() }) }));
 

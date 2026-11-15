@@ -9,6 +9,7 @@ import { displayOperator } from "@/contexts/MadMinuteContext/MadMinuteOperator";
 import { factLabel, worthAnotherLook } from "@/contexts/MadMinuteContext/troubleSpots";
 import { getBestInfo, scoreText } from "@/contexts/MadMinuteContext/personalBest";
 import { RoundRecord } from "@/contexts/MadMinuteContext/roundRecord";
+import { maybeRequestReview } from "@/contexts/MadMinuteContext/reviewPrompt";
 import { useRouteTo } from "@/contexts/RouteContext";
 import React, { useEffect, useMemo, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
@@ -94,6 +95,13 @@ export default function Results() {
     }, []);
 
     const bestInfo = useMemo(() => record ? getBestInfo(history, record) : null, [history, record]);
+
+    // After a new personal best, once the player has had a moment to see it, maybe ask for a rating (see reviewPrompt.ts).
+    useEffect(() => {
+        if (!bestInfo?.isNewBest) return;
+        const timer = setTimeout(() => { maybeRequestReview(history, bestInfo); }, 2000);
+        return () => clearTimeout(timer);
+    }, [bestInfo, history]);
 
     const {correct, incorrect, skipped} = getResponseResults(madMinute.questions)
 
