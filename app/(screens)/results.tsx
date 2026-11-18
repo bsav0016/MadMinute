@@ -10,9 +10,10 @@ import { factLabel, worthAnotherLook } from "@/contexts/MadMinuteContext/trouble
 import { getBestInfo, scoreText } from "@/contexts/MadMinuteContext/personalBest";
 import { RoundRecord } from "@/contexts/MadMinuteContext/roundRecord";
 import { maybeRequestReview } from "@/contexts/MadMinuteContext/reviewPrompt";
+import { resultMessage } from "@/contexts/MadMinuteContext/shareResult";
 import { useRouteTo } from "@/contexts/RouteContext";
 import React, { useEffect, useMemo, useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { Platform, ScrollView, Share, StyleSheet, Text, View } from "react-native";
 import { Routes } from "@/constants/Routes";
 import { useThemeColor } from "@/hooks/useThemeColor";
 
@@ -115,6 +116,17 @@ export default function Results() {
         { text: 'Skipped', value: skipped },
     ]
 
+    // Plain text through the share sheet: the score, the setup and a link to the app.
+    const shareResult = async () => {
+        const message = record ? resultMessage(record, !!bestInfo?.isNewBest, Platform.OS) : null;
+        if (!message) return;
+        try {
+            await Share.share({ message });
+        } catch {
+            // The share sheet failing to open is not worth interrupting the player for.
+        }
+    }
+
     const playAgain = () => {
         resetMadMinute();
         routeReplace(Routes.PlayMadMinute);
@@ -167,6 +179,7 @@ export default function Results() {
 
             <ThemedView style={styles.returnHomeContainer}>
                 <GeneralButton title="Play Again" onPress={playAgain} />
+                {record && attempted > 0 && <GeneralButton title="Share Score" onPress={shareResult} variant="secondary" />}
                 <GeneralButton title="Return Home" onPress={() => routeReplace(Routes.HomeScreen)} variant="secondary" />
             </ThemedView>
         </CustomHeaderView>
