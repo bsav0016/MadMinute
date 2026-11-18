@@ -58,8 +58,8 @@ describe("the published pages", () => {
     }
   });
 
-  test("every sheet has all its versions, plus the home page, index and sitemap", () => {
-    expect(pages).toHaveLength(SHEETS.length * VERSIONS + 3);
+  test("every sheet has all its versions, plus the home page, worksheet index, resources and sitemap", () => {
+    expect(pages).toHaveLength(SHEETS.length * VERSIONS + 3 + 16) // plus the 16 resource pages (resources.test.js checks them);
   });
 
   test("each page links to the App Store with its own campaign and has a canonical link", () => {

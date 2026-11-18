@@ -13,6 +13,7 @@
 const fs = require('fs');
 const path = require('path');
 const { appStoreLink, playStoreLink } = require('./growthLinks');
+const { resourcePages } = require('./resources');
 
 const SITE_URL = 'https://bsav0016.github.io/MadMinute';
 const DOCS = path.join(__dirname, '..', 'docs');
@@ -114,8 +115,19 @@ const CSS = `
   .grid small { color:var(--muted); font-size:12px; margin-right:4px; }
   .key { margin-top:28px; } .key .grid div { border-bottom:none; }
   footer { color:var(--muted); font-size:13px; margin-top:22px; }
-  ul.links { columns:2; padding-left:20px; } ul.links li { margin:2px 0; }
-  @media (max-width:560px) { .grid { grid-template-columns:repeat(3, 1fr); font-size:15px; } ul.links { columns:1; } }
+  ul.links { columns:2; padding-left:20px; } ul.links li { margin:2px 0; } ul.links.one { columns:1; } ul.links.one li { margin:8px 0; }
+  table.chart { border-collapse:collapse; width:100%; font-variant-numeric:tabular-nums; }
+  table.chart th, table.chart td { border:1px solid var(--line); padding:5px 6px; text-align:center; }
+  table.chart th { background:var(--bg); } table.chart td.sq { background:#dbe6fb; font-weight:700; }
+  table.track td { height:30px; } table.track th, table.track td { text-align:left; }
+  .grid.tt { grid-template-columns:repeat(4, 1fr); }
+  .maker { display:flex; flex-wrap:wrap; gap:10px 16px; align-items:flex-end; margin:12px 0; }
+  .maker label { display:flex; flex-direction:column; font-weight:600; font-size:14px; gap:3px; }
+  .maker label.check { flex-direction:row; align-items:center; gap:6px; }
+  .maker input[type=number], .maker select { font:inherit; padding:6px 8px; border:1px solid var(--line); border-radius:8px; width:130px; background:var(--card); color:var(--ink); }
+  .button.secondary { background:transparent; color:var(--brand); border:2px solid var(--brand); cursor:pointer; } button.button { border:0; cursor:pointer; font:inherit; font-weight:700; }
+  button.button.secondary { border:2px solid var(--brand); }
+  @media (max-width:560px) { .grid { grid-template-columns:repeat(3, 1fr); font-size:15px; } .grid.tt { grid-template-columns:repeat(2, 1fr); } ul.links { columns:1; } table.mchart { font-size:11px; } table.chart th, table.chart td { padding:3px 2px; } }
   @media print {
     body { background:#fff; font-size:12pt; } main { max-width:none; padding:0; }
     nav, .cta, .noprint, footer, .related { display:none !important; }
@@ -125,6 +137,8 @@ const CSS = `
     h1 { font-size:18pt; margin:0 0 4px; }
     .sheet-head { margin:4px 0 6px; }
     .key { break-before:page; margin-top:0; }
+    .maker { display:none; } table.chart { font-size:11pt; } table.chart th, table.chart td { padding:3px 4px; } table.track td { height:26px; }
+    @page { margin:0.5in; }
     h2 { margin-top:10px; }
   }
 `;
@@ -144,7 +158,7 @@ function layout({ title, description, canonical, depth, body }) {
 </head>
 <body>
 <main>
-<nav><a href="${up}index.html">Math Mad Minute</a><a href="${depth ? '' : 'worksheets/'}index.html">Worksheets</a><a href="${up}privacy.html">Privacy Policy</a></nav>
+<nav><a href="${up}index.html">Math Mad Minute</a><a href="${up}worksheets/index.html">Worksheets</a><a href="${up}resources/index.html">Resources</a><a href="${up}privacy.html">Privacy Policy</a></nav>
 ${body}
 <footer>Math Mad Minute by Savidge Apps. Free to print and copy for your classroom or home.</footer>
 </main>
@@ -234,7 +248,7 @@ function homePage() {
 <p>The classic timed arithmetic drill, on your phone. Answer as many problems as you can in 30, 60 or 120 seconds, choose which operations and number ranges to practise, then review every answer. It keeps your personal bests, your accuracy for each operation and a times table coloured by the facts you know. No ads, no account, and your history stays on your device.</p>
 ${ctaBox('web-home').replace('<h2>Practise it on a phone or tablet</h2>\n', '')}
 <h2>Printable worksheets</h2>
-<p>Prefer paper? There are <a href="worksheets/index.html">free printable mad minute worksheets</a> with answer keys for every operation.</p>
+<p>Prefer paper? There are <a href="worksheets/index.html">free printable mad minute worksheets</a> with answer keys for every operation, and <a href="resources/index.html">more free resources</a>: a worksheet maker, a multiplication chart, a practice page for every times table, a progress tracker and a guide to running a mad minute.</p>
 <h2>More</h2>
 <p><a href="privacy.html">Privacy Policy</a> &middot; savidgeapps@gmail.com</p>
 </div>`;
@@ -257,7 +271,7 @@ function sitemap(pages) {
 
 /** Every generated file as { file, html }, paths relative to docs/. */
 function buildAll() {
-  const pages = [homePage(), worksheetIndex()];
+  const pages = [homePage(), worksheetIndex(), ...resourcePages({ layout, ctaBox, esc, rng, between, hash, SITE_URL })];
   for (const sheet of SHEETS) for (let v = 1; v <= VERSIONS; v++) pages.push(sheetPage(sheet, v));
   return [...pages, { file: 'sitemap.xml', html: sitemap(pages) }];
 }

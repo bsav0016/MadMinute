@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Free Math Worksheet Maker: Mad Minute Sheets for Any Numbers</title>
+<meta name="description" content="Make a printable mad minute worksheet with the operation and number range you choose: addition, subtraction, multiplication, division or mixed, with an answer key.">
+<link rel="canonical" href="https://bsav0016.github.io/MadMinute/resources/worksheet-maker.html">
+<meta name="apple-itunes-app" content="app-id=6739588575">
+<style>
+  :root { --bg:#f6f8fb; --card:#fff; --ink:#16202e; --muted:#5d6b7e; --brand:#1d5fd1; --line:#dde3ec; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.55 system-ui,-apple-system,Segoe UI,Roboto,sans-serif; }
+  main { max-width:860px; margin:0 auto; padding:20px 16px 56px; }
+  nav { display:flex; gap:6px 18px; flex-wrap:wrap; margin-bottom:14px; font-weight:600; } nav a { text-decoration:none; }
+  a { color:var(--brand); }
+  h1 { font-size:26px; margin:8px 0; } h2 { font-size:19px; margin:26px 0 6px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:6px 20px 20px; }
+  .cta { border:1px solid var(--line); border-radius:12px; padding:2px 16px 12px; margin:22px 0; background:var(--bg); }
+  .button { display:inline-block; margin:4px 8px 4px 0; padding:9px 16px; border-radius:10px; background:var(--brand); color:#fff; font-weight:700; text-decoration:none; }
+  .sheet-head { display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px 24px; margin:12px 0 10px; font-weight:600; }
+  .grid { display:grid; grid-template-columns:repeat(5, 1fr); gap:10px 8px; font-variant-numeric:tabular-nums; font-size:17px; }
+  .grid div { border-bottom:1px solid var(--line); padding:5px 2px; white-space:nowrap; }
+  .grid small { color:var(--muted); font-size:12px; margin-right:4px; }
+  .key { margin-top:28px; } .key .grid div { border-bottom:none; }
+  footer { color:var(--muted); font-size:13px; margin-top:22px; }
+  ul.links { columns:2; padding-left:20px; } ul.links li { margin:2px 0; } ul.links.one { columns:1; } ul.links.one li { margin:8px 0; }
+  table.chart { border-collapse:collapse; width:100%; font-variant-numeric:tabular-nums; }
+  table.chart th, table.chart td { border:1px solid var(--line); padding:5px 6px; text-align:center; }
+  table.chart th { background:var(--bg); } table.chart td.sq { background:#dbe6fb; font-weight:700; }
+  table.track td { height:30px; } table.track th, table.track td { text-align:left; }
+  .grid.tt { grid-template-columns:repeat(4, 1fr); }
+  .maker { display:flex; flex-wrap:wrap; gap:10px 16px; align-items:flex-end; margin:12px 0; }
+  .maker label { display:flex; flex-direction:column; font-weight:600; font-size:14px; gap:3px; }
+  .maker label.check { flex-direction:row; align-items:center; gap:6px; }
+  .maker input[type=number], .maker select { font:inherit; padding:6px 8px; border:1px solid var(--line); border-radius:8px; width:130px; background:var(--card); color:var(--ink); }
+  .button.secondary { background:transparent; color:var(--brand); border:2px solid var(--brand); cursor:pointer; } button.button { border:0; cursor:pointer; font:inherit; font-weight:700; }
+  button.button.secondary { border:2px solid var(--brand); }
+  @media (max-width:560px) { .grid { grid-template-columns:repeat(3, 1fr); font-size:15px; } .grid.tt { grid-template-columns:repeat(2, 1fr); } ul.links { columns:1; } table.mchart { font-size:11px; } table.chart th, table.chart td { padding:3px 2px; } }
+  @media print {
+    body { background:#fff; font-size:12pt; } main { max-width:none; padding:0; }
+    nav, .cta, .noprint, footer, .related { display:none !important; }
+    .card { border:none; padding:0; }
+    .grid { grid-template-columns:repeat(5, 1fr); font-size:12pt; gap:2px 8px; }
+    .grid div { padding:2px 2px; }
+    h1 { font-size:18pt; margin:0 0 4px; }
+    .sheet-head { margin:4px 0 6px; }
+    .key { break-before:page; margin-top:0; }
+    .maker { display:none; } table.chart { font-size:11pt; } table.chart th, table.chart td { padding:3px 4px; } table.track td { height:26px; }
+    @page { margin:0.5in; }
+    h2 { margin-top:10px; }
+  }
+</style>
+</head>
+<body>
+<main>
+<nav><a href="../index.html">Math Mad Minute</a><a href="../worksheets/index.html">Worksheets</a><a href="../resources/index.html">Resources</a><a href="../privacy.html">Privacy Policy</a></nav>
+<div class="card">
+<h1>Make your own mad minute worksheet</h1>
+<p class="noprint">Choose the operation and the range of numbers, then print. Every click makes a fresh sheet. Nothing you choose is sent anywhere; it all happens in your browser.</p>
+<form id="maker" class="maker">
+<label>Operation
+<select name="op">
+<option value="add">Addition</option>
+<option value="sub">Subtraction</option>
+<option value="mul">Multiplication</option>
+<option value="div">Division</option>
+<option value="mix">Mixed</option>
+</select></label>
+<label>Smallest number <input type="number" name="min" value="0" min="0" max="100"></label>
+<label>Largest number <input type="number" name="max" value="12" min="0" max="100"></label>
+<label>Problems <input type="number" name="count" value="100" min="10" max="100"></label>
+<label class="check"><input type="checkbox" name="key" checked> Include answer key</label>
+<button class="button" type="submit">Make a new sheet</button>
+<button class="button secondary" type="button" id="print">Print</button>
+</form>
+<p class="noprint">Subtraction never gives a negative answer and division always comes out even, like the app. For division, the numbers are the facts you want to practise: 1 to 12 gives everything up to 12 x 12.</p>
+<div id="sheet" aria-live="polite"><noscript><p>The worksheet maker needs JavaScript. The <a href="../worksheets/index.html">ready-made worksheets</a> work without it.</p></noscript></div>
+</div>
+<div class="cta">
+<h2>Practise it on a phone or tablet</h2>
+<p>The free Math Mad Minute app runs the same drill with a timer (30, 60 or 120 seconds), shows every answer afterwards, and keeps track of the facts you miss. No ads, no account, and everything stays on the device.</p>
+<p><a class="button" href="https://apps.apple.com/us/app/math-mad-minute/id6739588575?pt=122126127&amp;ct=web-resources-maker&amp;mt=8">Get it on the App Store</a></p>
+</div>
+<footer>Math Mad Minute by Savidge Apps. Free to print and copy for your classroom or home.</footer>
+</main>
+<script src="../maker.js"></script>
+</body>
+</html>

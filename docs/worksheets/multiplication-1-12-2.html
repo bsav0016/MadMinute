@@ -24,8 +24,19 @@
   .grid small { color:var(--muted); font-size:12px; margin-right:4px; }
   .key { margin-top:28px; } .key .grid div { border-bottom:none; }
   footer { color:var(--muted); font-size:13px; margin-top:22px; }
-  ul.links { columns:2; padding-left:20px; } ul.links li { margin:2px 0; }
-  @media (max-width:560px) { .grid { grid-template-columns:repeat(3, 1fr); font-size:15px; } ul.links { columns:1; } }
+  ul.links { columns:2; padding-left:20px; } ul.links li { margin:2px 0; } ul.links.one { columns:1; } ul.links.one li { margin:8px 0; }
+  table.chart { border-collapse:collapse; width:100%; font-variant-numeric:tabular-nums; }
+  table.chart th, table.chart td { border:1px solid var(--line); padding:5px 6px; text-align:center; }
+  table.chart th { background:var(--bg); } table.chart td.sq { background:#dbe6fb; font-weight:700; }
+  table.track td { height:30px; } table.track th, table.track td { text-align:left; }
+  .grid.tt { grid-template-columns:repeat(4, 1fr); }
+  .maker { display:flex; flex-wrap:wrap; gap:10px 16px; align-items:flex-end; margin:12px 0; }
+  .maker label { display:flex; flex-direction:column; font-weight:600; font-size:14px; gap:3px; }
+  .maker label.check { flex-direction:row; align-items:center; gap:6px; }
+  .maker input[type=number], .maker select { font:inherit; padding:6px 8px; border:1px solid var(--line); border-radius:8px; width:130px; background:var(--card); color:var(--ink); }
+  .button.secondary { background:transparent; color:var(--brand); border:2px solid var(--brand); cursor:pointer; } button.button { border:0; cursor:pointer; font:inherit; font-weight:700; }
+  button.button.secondary { border:2px solid var(--brand); }
+  @media (max-width:560px) { .grid { grid-template-columns:repeat(3, 1fr); font-size:15px; } .grid.tt { grid-template-columns:repeat(2, 1fr); } ul.links { columns:1; } table.mchart { font-size:11px; } table.chart th, table.chart td { padding:3px 2px; } }
   @media print {
     body { background:#fff; font-size:12pt; } main { max-width:none; padding:0; }
     nav, .cta, .noprint, footer, .related { display:none !important; }
@@ -35,13 +46,15 @@
     h1 { font-size:18pt; margin:0 0 4px; }
     .sheet-head { margin:4px 0 6px; }
     .key { break-before:page; margin-top:0; }
+    .maker { display:none; } table.chart { font-size:11pt; } table.chart th, table.chart td { padding:3px 4px; } table.track td { height:26px; }
+    @page { margin:0.5in; }
     h2 { margin-top:10px; }
   }
 </style>
 </head>
 <body>
 <main>
-<nav><a href="../index.html">Math Mad Minute</a><a href="index.html">Worksheets</a><a href="../privacy.html">Privacy Policy</a></nav>
+<nav><a href="../index.html">Math Mad Minute</a><a href="../worksheets/index.html">Worksheets</a><a href="../resources/index.html">Resources</a><a href="../privacy.html">Privacy Policy</a></nav>
 <div class="card">
 <h1>Multiplication mad minute worksheet: factors 1 to 12</h1>
 <p class="noprint">A mad minute is a timed drill: answer as many of the 100 problems as you can in one minute (or give a younger child two or three), then check the answers on the next page. Print this page for the worksheet and the page after it for the answer key. Sheet 2 of 3.</p>
