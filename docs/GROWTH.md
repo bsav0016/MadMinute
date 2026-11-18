@@ -39,10 +39,10 @@ node -e "console.log(require('./scripts/growthLinks').appStoreLink('facebook-tea
 
 Add the name to the table so a campaign in the console can be traced back.
 
-**One value to set: the App Store provider token.** The App Store only reports a campaign link that carries the account's
+**The App Store provider token (already set).** The App Store only reports a campaign link that carries the account's
 provider token (`pt`). In App Store Connect open the app, App Analytics, Campaigns, Create Campaign Link, and copy the
 number after `pt=` into `APP_STORE_PROVIDER_TOKEN` in `scripts/growthLinks.js`, then rebuild. It is public and the same for
-every app on the account. Until it is set the links work but the App Store does not report their campaign.
+every app on the account. The provider token is set (122126127, 2026-11-18), so the App Store reports these campaigns in App Analytics.
 
 **Google Play:** there is no Play listing yet, so the pages show only the App Store button. When the app is live on Play,
 set `PLAY_STORE_URL` in `scripts/growthLinks.js` and rebuild; Play needs no token.
