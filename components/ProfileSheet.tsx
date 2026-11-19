@@ -5,12 +5,12 @@ import { GeneralButton } from "@/components/GeneralButton";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { useMadMinute } from "@/contexts/MadMinuteContext/MadMinuteContext";
 import {
-    avatarInfo, AvatarId, AVATARS, MAX_PROFILES, Profile, profileLabel, randomTitle, Title,
+    avatarInfo, AvatarId, AVATARS, MAX_PROFILES, Profile, profileLabel, randomTitle, Title, titlesTaken,
 } from "@/storage/profiles";
 
-// The sheet shows the list of players, or the form for adding or editing one. A new player's word is picked when the
-// form opens, so it is not random on every render.
-type Panel = { kind: "list" } | { kind: "add"; title: Title } | { kind: "edit"; id: string };
+// The sheet shows the list of players, or the form for adding or editing one. A new player's animal and word are
+// picked when the form opens, so they are not random on every render.
+type Panel = { kind: "list" } | { kind: "add"; avatar: AvatarId; title: Title } | { kind: "edit"; id: string };
 
 interface ProfileSheetProps {
     visible: boolean;
@@ -36,7 +36,13 @@ export function ProfileSheet({ visible, onClose }: ProfileSheetProps) {
 
     const toList = () => setView({ kind: "list" });
     const editing = view.kind === "edit" ? profiles.find(p => p.id === view.id) : undefined;
-    const taken = (except?: Profile) => new Set(profiles.filter(p => p !== except).map(p => p.avatar));
+    const registry = { active: activeProfile.id, profiles };
+
+    // Starts on an animal no one has yet if there is one, with a word that makes a name no one has.
+    const openAddForm = () => {
+        const avatar = (AVATARS.find(a => !profiles.some(p => p.avatar === a.id)) ?? AVATARS[0]).id;
+        setView({ kind: "add", avatar, title: randomTitle(titlesTaken(registry, avatar)) });
+    };
 
     const choose = (profile: Profile) => {
         switchProfile(profile.id);
@@ -67,13 +73,12 @@ export function ProfileSheet({ visible, onClose }: ProfileSheetProps) {
 
     if (view.kind === "add") {
         title = "Add a player";
-        const used = taken();
         body = (
             <PlayerForm
                 key="add"
-                initialAvatar={AVATARS.find(a => !used.has(a.id))!.id}
+                initialAvatar={view.avatar}
                 initialTitle={view.title}
-                taken={used}
+                titlesTaken={(avatar) => titlesTaken(registry, avatar)}
                 submitLabel={(name) => `Add ${name}`}
                 onSubmit={(avatar, word) => {
                     addProfile(avatar, word);
@@ -89,7 +94,7 @@ export function ProfileSheet({ visible, onClose }: ProfileSheetProps) {
                 key={editing.id}
                 initialAvatar={editing.avatar}
                 initialTitle={editing.title}
-                taken={taken(editing)}
+                titlesTaken={(avatar) => titlesTaken(registry, avatar, editing.id)}
                 submitLabel={() => "Save"}
                 onSubmit={(avatar, word) => {
                     changeProfile(editing.id, avatar, word);
@@ -134,7 +139,7 @@ export function ProfileSheet({ visible, onClose }: ProfileSheetProps) {
                     );
                 })}
                 {profiles.length < MAX_PROFILES && (
-                    <GeneralButton title="Add a player" fontSize={16} onPress={() => setView({ kind: "add", title: randomTitle() })} />
+                    <GeneralButton title="Add a player" fontSize={16} onPress={() => openAddForm()} />
                 )}
                 <GeneralButton title="Close" variant="secondary" fontSize={16} onPress={close} />
             </>
@@ -157,8 +162,8 @@ export function ProfileSheet({ visible, onClose }: ProfileSheetProps) {
 interface PlayerFormProps {
     initialAvatar: AvatarId;
     initialTitle: Title;
-    // Animals another player already has.
-    taken: Set<AvatarId>;
+    // The words other players already have with an animal; that name is not available.
+    titlesTaken: (avatar: AvatarId) => Title[];
     submitLabel: (name: string) => string;
     onSubmit: (avatar: AvatarId, title: Title) => void;
     onBack: () => void;
@@ -167,7 +172,7 @@ interface PlayerFormProps {
 }
 
 // Pick an animal and shuffle the word; the name they make is shown above the buttons.
-function PlayerForm({ initialAvatar, initialTitle, taken, submitLabel, onSubmit, onBack, onDelete, deleteLabel }: PlayerFormProps) {
+function PlayerForm({ initialAvatar, initialTitle, titlesTaken, submitLabel, onSubmit, onBack, onDelete, deleteLabel }: PlayerFormProps) {
     const surface = useThemeColor({}, "surface");
     const border = useThemeColor({}, "border");
     const muted = useThemeColor({}, "muted");
@@ -176,12 +181,18 @@ function PlayerForm({ initialAvatar, initialTitle, taken, submitLabel, onSubmit,
     const [word, setWord] = useState(initialTitle);
     const name = profileLabel({ avatar, title: word });
 
+    // Choosing an animal that already has this word gives the new player a different word, so the name is always free.
+    const pickAvatar = (id: AvatarId) => {
+        setAvatar(id);
+        const taken = titlesTaken(id);
+        if (taken.includes(word)) setWord(randomTitle(taken));
+    };
+
     return (
         <>
-            <ThemedText style={{ color: muted }}>Pick an animal, then shuffle the word until you like the name.</ThemedText>
+            <ThemedText style={{ color: muted }}>Pick an animal, then shuffle the word until you like the name. Two players can pick the same animal if their words differ.</ThemedText>
             <View style={styles.grid}>
                 {AVATARS.map(({ id, label, emoji }) => {
-                    const used = taken.has(id);
                     const selected = id === avatar;
                     return (
                         <TouchableOpacity
@@ -190,14 +201,11 @@ function PlayerForm({ initialAvatar, initialTitle, taken, submitLabel, onSubmit,
                                 styles.avatarButton,
                                 { backgroundColor: surface, borderColor: selected ? tint : border },
                                 selected && styles.avatarSelected,
-                                used && styles.taken,
                             ]}
-                            onPress={() => setAvatar(id)}
-                            disabled={used}
+                            onPress={() => pickAvatar(id)}
                             accessibilityRole="button"
                             accessibilityLabel={label}
-                            accessibilityHint={used ? "Already used by another player" : undefined}
-                            accessibilityState={{ disabled: used, selected }}
+                            accessibilityState={{ selected }}
                         >
                             <Text style={styles.avatarEmoji}>{emoji}</Text>
                             <ThemedText style={styles.avatarLabel}>{label}</ThemedText>
@@ -209,7 +217,7 @@ function PlayerForm({ initialAvatar, initialTitle, taken, submitLabel, onSubmit,
                 <Text style={styles.rowEmoji}>{avatarInfo(avatar).emoji}</Text>
                 <ThemedText type="defaultSemiBold" accessibilityLiveRegion="polite" style={styles.rowName}>{name}</ThemedText>
             </View>
-            <GeneralButton title="Shuffle word" variant="secondary" fontSize={16} onPress={() => setWord(randomTitle(word))} />
+            <GeneralButton title="Shuffle word" variant="secondary" fontSize={16} onPress={() => setWord(randomTitle([word, ...titlesTaken(avatar)]))} />
             <GeneralButton title={submitLabel(name)} fontSize={16} onPress={() => onSubmit(avatar, word)} />
             {onDelete && <GeneralButton title={deleteLabel ?? "Delete"} variant="secondary" fontSize={16} onPress={onDelete} />}
             <GeneralButton title="Back" variant="secondary" fontSize={16} onPress={onBack} />
@@ -255,7 +263,6 @@ const styles = StyleSheet.create({
         borderRadius: 14,
     },
     avatarSelected: { borderWidth: 3 },
-    taken: { opacity: 0.35 },
     avatarEmoji: { fontSize: 32 },
     avatarLabel: { fontSize: 14, lineHeight: 18 },
 });

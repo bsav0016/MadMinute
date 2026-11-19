@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
-    addProfile, AVATARS, changeProfile, DEFAULT_PROFILE_ID, defaultRegistry, freeAvatars, loadRegistry, MAX_PROFILES,
-    parseRegistry, profileKeys, profileLabel, randomTitle, removeProfile, removeProfileData, saveRegistry, switchProfile, TITLES,
+    addProfile, AVATARS, changeProfile, DEFAULT_PROFILE_ID, defaultRegistry, loadRegistry, MAX_PROFILES,
+    parseRegistry, profileKeys, profileLabel, randomTitle, removeProfile, removeProfileData, saveRegistry, switchProfile, TITLES, titlesTaken,
 } from '../profiles';
 import { STORAGE_KEYS } from '../storage';
 
@@ -41,8 +41,21 @@ describe('the profile list', () => {
         expect(profileLabel(next.profiles[1])).toBe('Brave Owl');
     });
 
-    it('refuses an avatar that is already taken', () => {
-        expect(addProfile(start, 'fox', 'Brave', 2000, 'p2')).toBe(start);
+    it('lets two players share an animal when their words differ', () => {
+        const next = addProfile(start, 'fox', 'Brave', 2000, 'p2');
+        expect(next.profiles.map(profileLabel)).toEqual(['Swift Fox', 'Brave Fox']);
+        expect(next.active).toBe('p2');
+    });
+
+    it('refuses a name another player already has', () => {
+        expect(addProfile(start, 'fox', 'Swift', 2000, 'p2')).toBe(start);
+    });
+
+    it('lists the words other players already have with an animal', () => {
+        const two = addProfile(start, 'fox', 'Brave', 2000, 'p2');
+        expect(titlesTaken(two, 'fox')).toEqual(['Swift', 'Brave']);
+        expect(titlesTaken(two, 'fox', 'p2')).toEqual(['Swift']);
+        expect(titlesTaken(two, 'owl')).toEqual([]);
     });
 
     it('refuses an id that is already used or not valid', () => {
@@ -50,12 +63,13 @@ describe('the profile list', () => {
         expect(addProfile(start, 'owl', 'Brave', 2000, 'Bad Id!')).toBe(start);
     });
 
-    it('stops at the number of avatars', () => {
+    it('stops at the limit', () => {
         let registry = start;
-        AVATARS.slice(1).forEach((avatar, i) => { registry = addProfile(registry, avatar.id, 'Brave', 2000 + i, `p${i}`); });
+        for (let i = 1; i < MAX_PROFILES; i++) {
+            registry = addProfile(registry, AVATARS[i % AVATARS.length].id, TITLES[i], 2000 + i, `p${i}`);
+        }
         expect(registry.profiles).toHaveLength(MAX_PROFILES);
-        expect(freeAvatars(registry)).toEqual([]);
-        expect(addProfile(registry, 'fox', 'Brave', 3000, 'extra')).toBe(registry);
+        expect(addProfile(registry, 'owl', 'Epic', 3000, 'extra')).toBe(registry);
     });
 
     it('switches to a profile that exists and ignores one that does not', () => {
@@ -69,12 +83,17 @@ describe('the profile list', () => {
         expect(addProfile(start, 'owl', 'Grumpy' as never, 2000, 'p2')).toBe(start);
     });
 
-    it('changes the animal to a free one only, keeping the id', () => {
+    it('changes the animal, keeping the id', () => {
         const two = addProfile(start, 'owl', 'Brave', 2000, 'p2');
         const changed = changeProfile(two, 'p2', 'frog', 'Brave');
         expect(changed.profiles[1]).toMatchObject({ id: 'p2', avatar: 'frog', title: 'Brave' });
-        expect(changeProfile(two, 'p2', 'fox', 'Brave')).toBe(two);
         expect(changeProfile(two, 'nobody', 'frog', 'Brave')).toBe(two);
+    });
+
+    it('lets a change share an animal, but not take a name another player has', () => {
+        const two = addProfile(start, 'owl', 'Brave', 2000, 'p2');
+        expect(changeProfile(two, 'p2', 'fox', 'Brave').profiles[1]).toMatchObject({ avatar: 'fox', title: 'Brave' });
+        expect(changeProfile(two, 'p2', 'fox', 'Swift')).toBe(two);
     });
 
     it('changes the word on its own, and refuses one that is not on the list', () => {
@@ -118,10 +137,11 @@ describe('names', () => {
     it('shuffles to a different word every time', () => {
         for (let i = 0; i < 40; i++) {
             const random = () => i / 40;
-            expect(randomTitle('Swift', random)).not.toBe('Swift');
+            expect(randomTitle(['Swift'], random)).not.toBe('Swift');
         }
-        expect(randomTitle('Swift', () => 0.9999999)).toBe(TITLES[TITLES.length - 1]);
-        expect(randomTitle(undefined, () => 0)).toBe(TITLES[0]);
+        expect(randomTitle(['Swift'], () => 0.9999999)).toBe(TITLES[TITLES.length - 1]);
+        expect(randomTitle(['Swift', 'Brave'], () => 0)).toBe(TITLES[2]);
+        expect(randomTitle([], () => 0)).toBe(TITLES[0]);
     });
 
     it('starts the first player as Swift Fox', () => {
@@ -137,6 +157,11 @@ describe('parseRegistry', () => {
 
     it('accepts a valid list', () => {
         expect(parseRegistry(good)).toEqual(good);
+    });
+
+    it('accepts two players with the same animal and different words', () => {
+        const shared = { ...good, profiles: [good.profiles[0], { ...good.profiles[1], avatar: 'fox' }] };
+        expect(parseRegistry(shared)?.profiles.map(profileLabel)).toEqual(['Swift Fox', 'Brave Fox']);
     });
 
     it('drops fields it does not know', () => {
@@ -162,7 +187,7 @@ describe('parseRegistry', () => {
         ['no profiles', { active: 'default', profiles: [] }],
         ['active profile missing', { ...good, active: 'zzz' }],
         ['duplicate id', { ...good, profiles: [good.profiles[0], { ...good.profiles[1], id: 'default' }] }],
-        ['duplicate avatar', { ...good, profiles: [good.profiles[0], { ...good.profiles[1], avatar: 'fox' }] }],
+        ['a name used twice', { ...good, profiles: [good.profiles[0], { ...good.profiles[1], avatar: 'fox', title: 'Swift' }] }],
         ['unknown avatar', { ...good, profiles: [good.profiles[0], { ...good.profiles[1], avatar: 'dragon' }] }],
         ['id that would be a key mess', { ...good, active: 'a.b', profiles: [{ ...good.profiles[0], id: 'a.b' }] }],
         ['bad createdAt', { ...good, profiles: [{ ...good.profiles[0], createdAt: 'yesterday' }, good.profiles[1]] }],

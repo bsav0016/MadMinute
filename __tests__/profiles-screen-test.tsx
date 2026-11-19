@@ -9,7 +9,7 @@ import { buildRoundRecord } from '@/contexts/MadMinuteContext/roundRecord';
 import { MadMinuteSettings } from '@/contexts/MadMinuteContext/MadMinuteSettings';
 import { MadMinuteQuestion } from '@/contexts/MadMinuteContext/MadMinuteQuestion';
 import { MadMinuteOperator } from '@/contexts/MadMinuteContext/MadMinuteOperator';
-import { AVATARS, addProfile, defaultRegistry, loadRegistry, saveRegistry } from '@/storage/profiles';
+import { AVATARS, addProfile, defaultRegistry, loadRegistry, MAX_PROFILES, saveRegistry, TITLES } from '@/storage/profiles';
 import { expectControlsNamed } from '@/test-utils/a11y';
 
 jest.mock('@react-native-async-storage/async-storage', () =>
@@ -117,16 +117,29 @@ describe('switching players from the home screen', () => {
         expect(has(tree, 'Playing as Swift Owl. Change player')).toBe(true);
     });
 
-    it('does not let an edit take an animal another player has', async () => {
+    it('lets an edit pick an animal another player has, as long as the name is free', async () => {
         await saveRegistry(addProfile(defaultRegistry(1), 'owl', 'Brave', 2, 'powl'));
         const tree = await render();
         await press(tree, 'Playing as Brave Owl. Change player');
         await press(tree, 'Edit Brave Owl');
-        const fox = byLabel(tree, 'Fox')[0];
-        expect(fox.props.disabled).toBe(true);
-        expect(fox.props.accessibilityHint).toBe('Already used by another player');
-        expect(byLabel(tree, 'Owl')[0].props.accessibilityState.selected).toBe(true);
-        expect(byLabel(tree, 'Owl')[0].props.disabled).toBeFalsy();
+        expect(byLabel(tree, 'Fox')[0].props.disabled).toBeFalsy();
+        await press(tree, 'Fox');
+        await press(tree, 'Save');
+        expect(has(tree, 'Brave Fox, playing now')).toBe(true);
+        expect(has(tree, 'Play as Swift Fox')).toBe(true);
+    });
+
+    it('gives an edit a different word when the name it would make is taken', async () => {
+        jest.spyOn(Math, 'random').mockReturnValue(0);
+        await saveRegistry(addProfile(defaultRegistry(1), 'owl', 'Swift', 2, 'powl'));
+        const tree = await render();
+        await press(tree, 'Playing as Swift Owl. Change player');
+        await press(tree, 'Edit Swift Owl');
+        await press(tree, 'Fox'); // Swift Fox already exists
+        await press(tree, 'Save');
+        expect(has(tree, 'Swift Fox, playing now')).toBe(false);
+        expect(has(tree, 'Brave Fox, playing now')).toBe(true);
+        expect(has(tree, 'Play as Swift Fox')).toBe(true);
     });
 
     it('shuffles the word until the player likes the name, and adds that', async () => {
@@ -158,16 +171,44 @@ describe('switching players from the home screen', () => {
         expect(owl).toMatchObject({ id: 'powl', title: 'Swift' });
     });
 
-    it('offers only avatars nobody uses, and says why the others are off', async () => {
+    it('lets a new player share an animal, with a word that makes the name free', async () => {
+        jest.spyOn(Math, 'random').mockReturnValue(0);
         await saveRegistry(addProfile(defaultRegistry(1), 'owl', 'Brave', 2, 'powl'));
         const tree = await render();
         await press(tree, 'Playing as Brave Owl. Change player');
         await press(tree, 'Add a player');
-        const fox = byLabel(tree, 'Fox')[0];
-        const frog = byLabel(tree, 'Frog')[0];
-        expect(fox.props.disabled).toBe(true);
-        expect(fox.props.accessibilityHint).toBe('Already used by another player');
-        expect(frog.props.disabled).toBeFalsy();
+        expect(byLabel(tree, 'Fox')[0].props.disabled).toBeFalsy();
+        expect(byLabel(tree, 'Frog')[0].props.accessibilityState.selected).toBe(true); // no one has Frog yet
+        await press(tree, 'Fox'); // Swift Fox exists, so the word moves on
+        expect(has(tree, 'Add Swift Fox')).toBe(false);
+        expect(has(tree, 'Add Brave Fox')).toBe(true);
+        await press(tree, 'Add Brave Fox');
+        const labels = (await loadRegistry())!.profiles.map(p => `${p.title} ${p.avatar}`);
+        expect(labels).toEqual(['Swift fox', 'Brave owl', 'Brave fox']);
+    });
+
+    it('starts on a free name even when every animal is already in use', async () => {
+        jest.spyOn(Math, 'random').mockReturnValue(0);
+        let registry = defaultRegistry(1); // Swift Fox
+        AVATARS.slice(1).forEach((a, i) => { registry = addProfile(registry, a.id, 'Brave', 2 + i, `p${i}`); });
+        await saveRegistry(registry);
+        const tree = await render();
+        await press(tree, 'Playing as Brave Unicorn. Change player');
+        await press(tree, 'Add a player');
+        expect(byLabel(tree, 'Fox')[0].props.accessibilityState.selected).toBe(true);
+        expect(has(tree, 'Add Swift Fox')).toBe(false); // that name is taken
+        expect(has(tree, 'Add Brave Fox')).toBe(true);
+    });
+
+    it('never shuffles to a name another player has', async () => {
+        jest.spyOn(Math, 'random').mockReturnValue(0);
+        await saveRegistry(addProfile(defaultRegistry(1), 'owl', 'Brave', 2, 'powl'));
+        const tree = await render();
+        await press(tree, 'Playing as Brave Owl. Change player');
+        await press(tree, 'Add a player');
+        await press(tree, 'Fox');
+        await press(tree, 'Shuffle word'); // not Brave (current) and not Swift (taken)
+        expect(has(tree, 'Add Clever Fox')).toBe(true);
     });
 
     it('changes a player\'s avatar from the edit view', async () => {
@@ -209,10 +250,13 @@ describe('switching players from the home screen', () => {
 
     it('stops offering to add players at the limit', async () => {
         let registry = defaultRegistry(1);
-        AVATARS.slice(1).forEach((a, i) => { registry = addProfile(registry, a.id, 'Brave', 2 + i, `p${i}`); });
+        for (let i = 1; i < MAX_PROFILES; i++) {
+            registry = addProfile(registry, AVATARS[i % AVATARS.length].id, TITLES[i], 1 + i, `p${i}`);
+        }
         await saveRegistry(registry);
         const tree = await render();
-        await press(tree, `Playing as Brave ${AVATARS[AVATARS.length - 1].label}. Change player`);
+        const last = MAX_PROFILES - 1;
+        await press(tree, `Playing as ${TITLES[last]} ${AVATARS[last % AVATARS.length].label}. Change player`);
         expect(has(tree, 'Add a player')).toBe(false);
     });
 

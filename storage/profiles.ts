@@ -24,8 +24,8 @@ export const TITLES = [
 
 export type Title = (typeof TITLES)[number];
 
-// Every profile has a different avatar, so the avatars are also the limit on how many profiles there can be.
-export const MAX_PROFILES = AVATARS.length;
+// As many as the home screen can show comfortably. Two players can share an animal, but not a whole name.
+export const MAX_PROFILES = 12;
 
 // The profile every install starts with. Its data stays under the keys the app used before profiles existed, so
 // nobody's saved progress has to be moved or copied.
@@ -52,9 +52,10 @@ export function profileLabel(profile: Pick<Profile, "avatar" | "title">): string
     return `${profile.title} ${avatarInfo(profile.avatar).label}`;
 }
 
-// A word from the list, different from `exclude` so that shuffling always changes it.
-export function randomTitle(exclude?: Title, random: () => number = Math.random): Title {
-    const choices = TITLES.filter(t => t !== exclude);
+// A word from the list that is not in `exclude`, so shuffling always changes it.
+export function randomTitle(exclude: readonly Title[] = [], random: () => number = Math.random): Title {
+    const choices = TITLES.filter(t => !exclude.includes(t));
+    if (choices.length === 0) return TITLES[0];
     return choices[Math.min(choices.length - 1, Math.floor(random() * choices.length))];
 }
 
@@ -85,17 +86,20 @@ export function parseRegistry(data: unknown): ProfileRegistry | null {
     if (profiles.length < 1 || profiles.length > MAX_PROFILES) return null;
 
     const ids = new Set<string>();
-    const avatars = new Set<string>();
+    const names = new Set<string>();
     const parsed: Profile[] = [];
     for (const item of profiles) {
         if (item === null || typeof item !== "object") return null;
         const { id, avatar, title, createdAt } = item as Record<string, unknown>;
         if (typeof id !== "string" || !ID_PATTERN.test(id) || ids.has(id)) return null;
-        if (!isAvatar(avatar) || avatars.has(avatar)) return null;
+        if (!isAvatar(avatar)) return null;
         if (typeof createdAt !== "number" || !Number.isFinite(createdAt)) return null;
+        const word = isTitle(title) ? title : titleFromId(id);
+        const name = `${word} ${avatar}`;
+        if (names.has(name)) return null;
         ids.add(id);
-        avatars.add(avatar);
-        parsed.push({ id, avatar, title: isTitle(title) ? title : titleFromId(id), createdAt });
+        names.add(name);
+        parsed.push({ id, avatar, title: word, createdAt });
     }
     if (!ids.has(active)) return null;
     return { active, profiles: parsed };
@@ -105,17 +109,17 @@ export function newProfileId(): string {
     return `p${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
 }
 
-export function freeAvatars(registry: ProfileRegistry): AvatarId[] {
-    const used = new Set(registry.profiles.map(p => p.avatar));
-    return AVATARS.map(a => a.id).filter(id => !used.has(id));
+// The words other players already have with this animal. A new or edited player cannot use any of them.
+export function titlesTaken(registry: ProfileRegistry, avatar: AvatarId, exceptId?: string): Title[] {
+    return registry.profiles.filter(p => p.avatar === avatar && p.id !== exceptId).map(p => p.title);
 }
 
-// Adds a profile and makes it the active one. Returns the registry unchanged if the avatar is taken or the limit is hit.
+// Adds a profile and makes it the active one. Returns the registry unchanged if that name is taken or the limit is hit.
 export function addProfile(
     registry: ProfileRegistry, avatar: AvatarId, title: Title, now: number = Date.now(), id: string = newProfileId()
 ): ProfileRegistry {
     if (registry.profiles.length >= MAX_PROFILES) return registry;
-    if (!freeAvatars(registry).includes(avatar) || !isTitle(title)) return registry;
+    if (!isAvatar(avatar) || !isTitle(title) || titlesTaken(registry, avatar).includes(title)) return registry;
     if (registry.profiles.some(p => p.id === id) || !ID_PATTERN.test(id)) return registry;
     return { active: id, profiles: [...registry.profiles, { id, avatar, title, createdAt: now }] };
 }
@@ -125,11 +129,11 @@ export function switchProfile(registry: ProfileRegistry, id: string): ProfileReg
     return { ...registry, active: id };
 }
 
-// Changes a profile's animal (to one nobody else is using) and word. The id, and so the profile's data, stays the same.
+// Changes a profile's animal and word, to a name no one else has. The id, and so the profile's data, stays the same.
 export function changeProfile(registry: ProfileRegistry, id: string, avatar: AvatarId, title: Title): ProfileRegistry {
     const target = registry.profiles.find(p => p.id === id);
-    if (!target || !isTitle(title)) return registry;
-    if (avatar !== target.avatar && !freeAvatars(registry).includes(avatar)) return registry;
+    if (!target || !isAvatar(avatar) || !isTitle(title)) return registry;
+    if (titlesTaken(registry, avatar, id).includes(title)) return registry;
     if (avatar === target.avatar && title === target.title) return registry;
     return { ...registry, profiles: registry.profiles.map(p => (p.id === id ? { ...p, avatar, title } : p)) };
 }
