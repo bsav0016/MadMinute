@@ -9,8 +9,8 @@ import { clearFacts, loadFacts, saveFacts } from './factStorage';
 import { MadMinuteQuestion } from './MadMinuteQuestion';
 import { focusPool } from './focus';
 import {
-    addProfile as addToRegistry, AvatarId, changeAvatar, defaultRegistry, loadRegistry, Profile, ProfileRegistry,
-    removeProfile as removeFromRegistry, removeProfileData, saveRegistry, switchProfile as switchInRegistry,
+    addProfile as addToRegistry, AvatarId, changeProfile as changeInRegistry, defaultRegistry, loadRegistry, Profile, ProfileRegistry,
+    removeProfile as removeFromRegistry, removeProfileData, saveRegistry, switchProfile as switchInRegistry, Title,
 } from '@/storage/profiles';
 
 
@@ -28,9 +28,9 @@ interface MadMinuteContextType {
     // The people who share this device. Each has their own settings, history and record of problems.
     profiles: Profile[];
     activeProfile: Profile;
-    addProfile: (avatar: AvatarId) => void;
+    addProfile: (avatar: AvatarId, title: Title) => void;
     switchProfile: (id: string) => void;
-    changeProfileAvatar: (id: string, avatar: AvatarId) => void;
+    changeProfile: (id: string, avatar: AvatarId, title: Title) => void;
     removeProfile: (id: string) => void;
 }
 
@@ -51,7 +51,7 @@ const MadMinuteContext = createContext<MadMinuteContextType>({
     activeProfile: initialRegistry.profiles[0],
     addProfile: () => {},
     switchProfile: () => {},
-    changeProfileAvatar: () => {},
+    changeProfile: () => {},
     removeProfile: () => {},
 });
 
@@ -282,9 +282,9 @@ export const MadMinuteProvider: React.FC<{ children: ReactNode }> = ({ children 
         if (switched) resetForProfile();
     };
 
-    const addProfile = (avatar: AvatarId) => applyRegistry(addToRegistry(registryRef.current, avatar));
+    const addProfile = (avatar: AvatarId, title: Title) => applyRegistry(addToRegistry(registryRef.current, avatar, title));
     const switchProfile = (id: string) => applyRegistry(switchInRegistry(registryRef.current, id));
-    const changeProfileAvatar = (id: string, avatar: AvatarId) => applyRegistry(changeAvatar(registryRef.current, id, avatar));
+    const changeProfile = (id: string, avatar: AvatarId, title: Title) => applyRegistry(changeInRegistry(registryRef.current, id, avatar, title));
     const removeProfile = (id: string) => {
         const next = removeFromRegistry(registryRef.current, id);
         if (next === registryRef.current) return;
@@ -297,7 +297,7 @@ export const MadMinuteProvider: React.FC<{ children: ReactNode }> = ({ children 
     return (
         <MadMinuteContext.Provider value={{
             madMinute, updateSettings, addQuestion, submitResponse, markQuestionShown, resetMadMinute, history, recordRound,
-            clearHistory, facts, profiles: registry.profiles, activeProfile, addProfile, switchProfile, changeProfileAvatar,
+            clearHistory, facts, profiles: registry.profiles, activeProfile, addProfile, switchProfile, changeProfile,
             removeProfile,
         }}>
             {children}
