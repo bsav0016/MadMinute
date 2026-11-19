@@ -8,6 +8,7 @@ export const STORAGE_KEYS = {
     history: "madminute.history",
     facts: "madminute.facts",
     review: "madminute.review",
+    profiles: "madminute.profiles",
 } as const;
 
 // Returns the stored data, or null if it is missing, unreadable or from another version.
