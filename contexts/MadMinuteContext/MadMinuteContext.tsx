@@ -8,7 +8,15 @@ import { applyRound, FactStats } from './factStats';
 import { clearFacts, loadFacts, saveFacts } from './factStorage';
 import { MadMinuteQuestion } from './MadMinuteQuestion';
 import { focusPool } from './focus';
+import {
+    addProfile as addToRegistry, AvatarId, changeProfile as changeInRegistry, defaultRegistry, loadRegistry, MAX_PROFILES,
+    newProfileId, Profile, profileLabel, ProfileRegistry, randomTitle, removeProfile as removeFromRegistry,
+    removeProfileData, saveRegistry, switchProfile as switchInRegistry, Title, titlesTaken,
+} from '@/storage/profiles';
+import { Backup, buildBackupText } from './backup';
 
+
+export type ImportResult = { ok: true; label: string } | { ok: false; reason: string };
 
 interface MadMinuteContextType {
     madMinute: MadMinuteClass;
@@ -21,7 +29,19 @@ interface MadMinuteContextType {
     recordRound: () => RoundRecord | null;
     clearHistory: () => void;
     facts: FactStats;
+    // The people who share this device. Each has their own settings, history and record of problems.
+    profiles: Profile[];
+    activeProfile: Profile;
+    addProfile: (avatar: AvatarId, title: Title) => void;
+    switchProfile: (id: string) => void;
+    changeProfile: (id: string, avatar: AvatarId, title: Title) => void;
+    removeProfile: (id: string) => void;
+    // The active player's progress as text to share, and a way to bring a backup back in as a new player.
+    exportProgress: () => string;
+    importProgress: (backup: Backup) => Promise<ImportResult>;
 }
+
+const initialRegistry = defaultRegistry(0);
 
 const MadMinuteContext = createContext<MadMinuteContextType>({
     madMinute: new MadMinuteClass(),
@@ -33,7 +53,15 @@ const MadMinuteContext = createContext<MadMinuteContextType>({
     history: [],
     recordRound: () => null,
     clearHistory: () => {},
-    facts: {}
+    facts: {},
+    profiles: initialRegistry.profiles,
+    activeProfile: initialRegistry.profiles[0],
+    addProfile: () => {},
+    switchProfile: () => {},
+    changeProfile: () => {},
+    removeProfile: () => {},
+    exportProgress: () => '',
+    importProgress: async () => ({ ok: false, reason: '' }),
 });
 
 const newRoundId = () => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
@@ -41,19 +69,55 @@ const newRoundId = () => `${Date.now().toString(36)}-${Math.random().toString(36
 export const MadMinuteProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [madMinute, setMadMinute] = useState<MadMinuteClass>(new MadMinuteClass());
 
+    // Who is playing. Nothing else loads until the saved list of profiles has, so the right profile's data is read.
+    const [registry, setRegistry] = useState<ProfileRegistry>(() => defaultRegistry());
+    const registryRef = useRef(registry);
+    const [registryLoaded, setRegistryLoaded] = useState(false);
+    const registryReady = useRef(false);
+    const waitingForRegistry = useRef<(() => void)[]>([]);
+    // Bumped when the player switches profile, so a load that was already running cannot fill in the old profile's data.
+    const profileGeneration = useRef(0);
+    const profileId = registry.active;
+
+    useEffect(() => {
+        loadRegistry().then((saved) => {
+            if (saved) {
+                registryRef.current = saved;
+                setRegistry(saved);
+            }
+            registryReady.current = true;
+            setRegistryLoaded(true);
+            waitingForRegistry.current.splice(0).forEach((run) => run());
+        });
+    }, []);
+
+    // Runs a settings save for the active profile now, or as soon as the profile list has loaded if it has not yet.
+    const saveForActiveProfile = (save: (id: string) => void) => {
+        if (registryReady.current) save(registryRef.current.active);
+        else waitingForRegistry.current.push(() => save(registryRef.current.active));
+    };
+
     // Set once the player changes settings, so a slow load of the saved ones cannot overwrite that choice.
     const settingsChanged = useRef(false);
 
     useEffect(() => {
-        loadSettings().then((saved) => {
+        if (!registryLoaded) return;
+        const generation = profileGeneration.current;
+        loadSettings(profileId).then((saved) => {
+            if (generation !== profileGeneration.current) return; // switched while loading
             if (saved && !settingsChanged.current) {
                 setMadMinute((current) => new MadMinuteClass(saved, current.questions));
             }
         });
-    }, []);
+    }, [registryLoaded, profileId]);
 
     const [history, setHistory] = useState<RoundRecord[]>([]);
     const historyRef = useRef<RoundRecord[]>([]);
+    // Rounds finished before the saved history has loaded are saved by the load, on top of what it finds. Saving
+    // them sooner would replace the saved history with only those rounds.
+    const historyLoaded = useRef(false);
+    // Bumped when the history is cleared, so a load that was already running cannot bring the old rounds back.
+    const historyGeneration = useRef(0);
     // Each round gets an id when it starts, so the results screen saving it twice (a remount, say) cannot add it twice.
     const roundId = useRef(newRoundId());
     const recordedRound = useRef<{ id: string; record: RoundRecord | null } | null>(null);
@@ -64,12 +128,20 @@ export const MadMinuteProvider: React.FC<{ children: ReactNode }> = ({ children 
     };
 
     useEffect(() => {
-        loadHistory().then((saved) => {
-            if (!saved) return;
+        if (!registryLoaded) return;
+        const profile = profileGeneration.current;
+        const generation = historyGeneration.current;
+        loadHistory(profileId).then((saved) => {
+            if (profile !== profileGeneration.current || generation !== historyGeneration.current) return; // switched or cleared while loading
+            historyLoaded.current = true;
             // Anything recorded while the load was running is newer, so it goes on top.
-            changeHistory([...historyRef.current].reverse().reduce(addRecord, saved));
+            const recordedMeanwhile = historyRef.current.length > 0;
+            if (!saved && !recordedMeanwhile) return;
+            const merged = [...historyRef.current].reverse().reduce(addRecord, saved ?? []);
+            changeHistory(merged);
+            if (recordedMeanwhile) saveHistory(merged, profileId);
         });
-    }, []);
+    }, [registryLoaded, profileId]);
 
     // The player's record of each problem. Like the history it is kept on the device, loaded at launch, and added to
     // once per finished round (the round id guard in recordRound covers both).
@@ -78,7 +150,7 @@ export const MadMinuteProvider: React.FC<{ children: ReactNode }> = ({ children 
     const factsLoaded = useRef(false);
     // Rounds finished while the saved facts were still loading. They are applied on top of what loads, so neither is lost.
     const roundsBeforeLoad = useRef<{ questions: MadMinuteQuestion[]; playedAt: number }[]>([]);
-    // Bumped when the facts are cleared, so a load that was already running cannot bring the old ones back.
+    // Bumped when the facts are cleared or the profile changes, so a load that was already running cannot bring the old ones back.
     const factsGeneration = useRef(0);
 
     const changeFacts = (next: FactStats) => {
@@ -87,22 +159,23 @@ export const MadMinuteProvider: React.FC<{ children: ReactNode }> = ({ children 
     };
 
     useEffect(() => {
+        if (!registryLoaded) return;
         const generation = factsGeneration.current;
-        loadFacts().then((saved) => {
-            if (generation !== factsGeneration.current) return; // cleared while loading
+        loadFacts(profileId).then((saved) => {
+            if (generation !== factsGeneration.current) return; // cleared or switched while loading
             factsLoaded.current = true;
             const queued = roundsBeforeLoad.current;
             roundsBeforeLoad.current = [];
             if (!saved && queued.length === 0) return;
             const merged = queued.reduce((stats, round) => applyRound(stats, round.questions, round.playedAt), saved ?? {});
             changeFacts(merged);
-            if (queued.length > 0) saveFacts(merged);
+            if (queued.length > 0) saveFacts(merged, profileId);
         });
-    }, []);
+    }, [registryLoaded, profileId]);
 
     const updateSettings = (newSettings: MadMinuteSettings) => {
         settingsChanged.current = true;
-        saveSettings(newSettings);
+        saveForActiveProfile((id) => saveSettings(newSettings, id));
         const updatedMadMinute = new MadMinuteClass(
             newSettings,
             madMinute.questions
@@ -165,12 +238,12 @@ export const MadMinuteProvider: React.FC<{ children: ReactNode }> = ({ children 
         if (record) {
             const next = addRecord(historyRef.current, record);
             changeHistory(next);
-            saveHistory(next);
+            if (historyLoaded.current) saveHistory(next, registryRef.current.active);
 
             const nextFacts = applyRound(factsRef.current, madMinute.questions, playedAt);
             changeFacts(nextFacts);
             if (factsLoaded.current) {
-                saveFacts(nextFacts);
+                saveFacts(nextFacts, registryRef.current.active);
             } else {
                 // Saving now would overwrite facts that have not loaded yet. The load applies this round and saves.
                 roundsBeforeLoad.current.push({ questions: madMinute.questions, playedAt });
@@ -181,17 +254,102 @@ export const MadMinuteProvider: React.FC<{ children: ReactNode }> = ({ children 
 
     const clearHistory = () => {
         changeHistory([]);
-        clearStoredHistory();
+        historyGeneration.current += 1;
+        historyLoaded.current = true;
+        clearStoredHistory(registryRef.current.active);
         // The record of each problem goes with the history, and so does anything still waiting to be added to it.
         factsGeneration.current += 1;
         factsLoaded.current = true;
         roundsBeforeLoad.current = [];
         changeFacts({});
-        clearFacts();
+        clearFacts(registryRef.current.active);
+    };
+
+    // Everything held in memory belongs to the profile that was playing, so a switch starts the next one from empty
+    // and the effects above load their saved data.
+    const resetForProfile = () => {
+        profileGeneration.current += 1;
+        settingsChanged.current = false;
+        changeHistory([]);
+        historyLoaded.current = false;
+        factsGeneration.current += 1;
+        factsLoaded.current = false;
+        roundsBeforeLoad.current = [];
+        changeFacts({});
+        roundId.current = newRoundId();
+        recordedRound.current = null;
+        setMadMinute(new MadMinuteClass());
+    };
+
+    const applyRegistry = (next: ProfileRegistry) => {
+        // Before the saved list has loaded, a change would be overwritten by it, and nothing can ask for one that soon.
+        if (!registryReady.current || next === registryRef.current) return;
+        const switched = next.active !== registryRef.current.active;
+        registryRef.current = next;
+        setRegistry(next);
+        saveRegistry(next);
+        if (switched) resetForProfile();
+    };
+
+    const addProfile = (avatar: AvatarId, title: Title) => applyRegistry(addToRegistry(registryRef.current, avatar, title));
+    const switchProfile = (id: string) => applyRegistry(switchInRegistry(registryRef.current, id));
+    const changeProfile = (id: string, avatar: AvatarId, title: Title) => applyRegistry(changeInRegistry(registryRef.current, id, avatar, title));
+    const removeProfile = (id: string) => {
+        const next = removeFromRegistry(registryRef.current, id);
+        if (next === registryRef.current) return;
+        removeProfileData(id);
+        applyRegistry(next);
+    };
+
+    const activeProfile = registry.profiles.find((profile) => profile.id === registry.active) ?? registry.profiles[0];
+
+    const exportProgress = (): string => buildBackupText({
+        exportedAt: Date.now(),
+        profile: { id: activeProfile.id, avatar: activeProfile.avatar, title: activeProfile.title },
+        settings: madMinute.settings,
+        history,
+        facts,
+    });
+
+    // Adds a backup as a new player and switches to them. The id is kept if this device has no such player (so a
+    // restore after a reinstall is the same player again), otherwise the copy gets its own, and if the name is taken
+    // the word changes. The data is saved first, so the new player opens with it.
+    const importProgress = async (backup: Backup): Promise<ImportResult> => {
+        if (!registryReady.current) return { ok: false, reason: 'Mad Minute is still starting. Try again in a moment.' };
+        const current = registryRef.current;
+        if (current.profiles.length >= MAX_PROFILES) {
+            return { ok: false, reason: `This device already has ${MAX_PROFILES} players. Delete one first.` };
+        }
+        const id = current.profiles.some((p) => p.id === backup.profile.id) ? newProfileId() : backup.profile.id;
+        const { avatar } = backup.profile;
+        const taken = titlesTaken(current, avatar);
+        const title = taken.includes(backup.profile.title) ? randomTitle(taken) : backup.profile.title;
+
+        const saved = await Promise.all([
+            saveHistory(backup.history, id),
+            saveFacts(backup.facts, id),
+            backup.settings ? saveSettings(backup.settings, id) : Promise.resolve(true),
+        ]);
+        if (!saved.every(Boolean)) {
+            await removeProfileData(id);
+            return { ok: false, reason: 'Could not save the backup on this device. Free up some space and try again.' };
+        }
+        // The list may have changed while the data was saving.
+        const next = addToRegistry(registryRef.current, avatar, title, Date.now(), id);
+        if (next === registryRef.current) {
+            await removeProfileData(id);
+            return { ok: false, reason: 'Could not add the player. Try again.' };
+        }
+        applyRegistry(next);
+        return { ok: true, label: profileLabel({ avatar, title }) };
     };
 
     return (
-        <MadMinuteContext.Provider value={{ madMinute, updateSettings, addQuestion, submitResponse, markQuestionShown, resetMadMinute, history, recordRound, clearHistory, facts }}>
+        <MadMinuteContext.Provider value={{
+            madMinute, updateSettings, addQuestion, submitResponse, markQuestionShown, resetMadMinute, history, recordRound,
+            clearHistory, facts, profiles: registry.profiles, activeProfile, addProfile, switchProfile, changeProfile,
+            removeProfile, exportProgress, importProgress,
+        }}>
             {children}
         </MadMinuteContext.Provider>
     );

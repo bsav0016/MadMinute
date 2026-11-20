@@ -1,4 +1,5 @@
-import { loadStored, saveStored, STORAGE_KEYS } from "@/storage/storage";
+import { loadStored, saveStored } from "@/storage/storage";
+import { DEFAULT_PROFILE_ID, profileKeys } from "@/storage/profiles";
 import { MadMinuteOperator } from "./MadMinuteOperator";
 import { MadMinuteSettings } from "./MadMinuteSettings";
 import { DURATION_OPTIONS_SECONDS } from "./presets";
@@ -33,12 +34,12 @@ export function parseSettings(data: unknown): MadMinuteSettings | null {
     );
 }
 
-export function loadSettings(): Promise<MadMinuteSettings | null> {
-    return loadStored(STORAGE_KEYS.settings, parseSettings);
+export function loadSettings(profileId: string = DEFAULT_PROFILE_ID): Promise<MadMinuteSettings | null> {
+    return loadStored(profileKeys(profileId).settings, parseSettings);
 }
 
-export function saveSettings(settings: MadMinuteSettings): Promise<boolean> {
-    return saveStored(STORAGE_KEYS.settings, {
+export function saveSettings(settings: MadMinuteSettings, profileId: string = DEFAULT_PROFILE_ID): Promise<boolean> {
+    return saveStored(profileKeys(profileId).settings, {
         minValue: settings.minValue,
         maxValue: settings.maxValue,
         availableOperators: settings.availableOperators,
