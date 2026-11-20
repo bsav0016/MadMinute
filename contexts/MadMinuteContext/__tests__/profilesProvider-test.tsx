@@ -84,7 +84,7 @@ describe('learner profiles in the provider', () => {
         await saveFacts(SAVED_FACTS);
         await saveSettings(settingsOf(12));
         const api = await setup();
-        await act(async () => { api().addProfile('owl'); });
+        await act(async () => { api().addProfile('owl', 'Brave'); });
         await act(async () => {});
         expect(api().activeProfile.avatar).toBe('owl');
         expect(api().profiles).toHaveLength(2);
@@ -99,7 +99,7 @@ describe('learner profiles in the provider', () => {
         expect(api().history).toHaveLength(1);
         const defaultId = api().activeProfile.id;
 
-        await act(async () => { api().addProfile('owl'); });
+        await act(async () => { api().addProfile('owl', 'Brave'); });
         await act(async () => {});
         const owlId = api().activeProfile.id;
         await playRound(api);
@@ -123,7 +123,7 @@ describe('learner profiles in the provider', () => {
     it('keeps settings apart', async () => {
         const api = await setup();
         await act(async () => { api().updateSettings(settingsOf(7)); });
-        await act(async () => { api().addProfile('owl'); });
+        await act(async () => { api().addProfile('owl', 'Brave'); });
         await act(async () => {});
         await act(async () => { api().updateSettings(settingsOf(15)); });
         const owlId = api().activeProfile.id;
@@ -136,7 +136,7 @@ describe('learner profiles in the provider', () => {
     });
 
     it('opens on the profile that was active last time', async () => {
-        const registry = addProfile(defaultRegistry(1), 'frog', 2, 'pfrog');
+        const registry = addProfile(defaultRegistry(1), 'frog', 'Clever', 2, 'pfrog');
         await saveRegistry(registry);
         await saveFacts(SAVED_FACTS); // the default profile has facts, the active one does not
         const api = await setup();
@@ -149,7 +149,7 @@ describe('learner profiles in the provider', () => {
 
     it('remembers a switch for the next launch', async () => {
         const api = await setup();
-        await act(async () => { api().addProfile('owl'); });
+        await act(async () => { api().addProfile('owl', 'Brave'); });
         const owlId = api().activeProfile.id;
         const registry = await loadRegistry();
         expect(registry?.active).toBe(owlId);
@@ -160,7 +160,7 @@ describe('learner profiles in the provider', () => {
     it('clears only the active profile\'s history and facts', async () => {
         const api = await setup();
         await playRound(api);
-        await act(async () => { api().addProfile('owl'); });
+        await act(async () => { api().addProfile('owl', 'Brave'); });
         await act(async () => {});
         const owlId = api().activeProfile.id;
         await playRound(api);
@@ -174,7 +174,7 @@ describe('learner profiles in the provider', () => {
     it('deletes a profile\'s data with it and moves to another profile', async () => {
         const api = await setup();
         await playRound(api);
-        await act(async () => { api().addProfile('owl'); });
+        await act(async () => { api().addProfile('owl', 'Brave'); });
         await act(async () => {});
         const owlId = api().activeProfile.id;
         await playRound(api);
@@ -211,7 +211,7 @@ describe('learner profiles in the provider', () => {
         });
         try {
             const api = await setup(); // the default history is still loading
-            await act(async () => { api().addProfile('owl'); });
+            await act(async () => { api().addProfile('owl', 'Brave'); });
             await act(async () => {});
             await act(async () => { release(); });
             await settle();
@@ -235,9 +235,9 @@ describe('learner profiles in the provider', () => {
     });
 
     it('ignores profile changes made before the saved profiles have loaded', async () => {
-        await saveRegistry(addProfile(defaultRegistry(1), 'frog', 2, 'pfrog'));
+        await saveRegistry(addProfile(defaultRegistry(1), 'frog', 'Clever', 2, 'pfrog'));
         const api = mount();
-        act(() => { api().addProfile('owl'); });
+        act(() => { api().addProfile('owl', 'Brave'); });
         await settle();
         expect(api().profiles.map(p => p.id)).toEqual(['default', 'pfrog']);
         expect(api().activeProfile.id).toBe('pfrog');

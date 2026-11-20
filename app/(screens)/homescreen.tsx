@@ -1,11 +1,14 @@
-import React from "react";
-import { Linking, StyleSheet, TouchableOpacity } from "react-native";
+import React, { useState } from "react";
+import { Linking, StyleSheet, Text, TouchableOpacity } from "react-native";
 import { useRouteTo } from "@/contexts/RouteContext";
 import { Routes } from "@/constants/Routes";
 import { ThemedView } from "@/components/ThemedView";
 import { ThemedText } from "@/components/ThemedText";
 import { GeneralButton } from "@/components/GeneralButton";
 import { useThemeColor } from "@/hooks/useThemeColor";
+import { ProfileSheet } from "@/components/ProfileSheet";
+import { useMadMinute } from "@/contexts/MadMinuteContext/MadMinuteContext";
+import { avatarInfo, profileLabel } from "@/storage/profiles";
 
 const PRIVACY_POLICY_URL = "https://bsav0016.github.io/MadMinute/privacy";
 
@@ -15,6 +18,10 @@ export default function HomeScreen() {
   const border = useThemeColor({}, 'border');
   const muted = useThemeColor({}, 'muted');
   const tint = useThemeColor({}, 'tint');
+  const { profiles, activeProfile } = useMadMinute();
+  const [sheetOpen, setSheetOpen] = useState(false);
+  // Someone playing alone sees no extra controls beyond a small link to add a second player.
+  const shared = profiles.length > 1;
 
   const homeButtons = [
     { title: "Start", route: Routes.CreateMadMinute, variant: 'primary' as const },
@@ -23,6 +30,18 @@ export default function HomeScreen() {
 
   return (
     <ThemedView style={styles.homeView}>
+      {shared && (
+        <TouchableOpacity
+          style={[styles.chip, { backgroundColor: surface, borderColor: border }]}
+          onPress={() => setSheetOpen(true)}
+          accessibilityRole="button"
+          accessibilityLabel={`Playing as ${profileLabel(activeProfile)}. Change player`}
+        >
+          <Text style={styles.chipEmoji}>{avatarInfo(activeProfile.avatar).emoji}</Text>
+          <ThemedText type="defaultSemiBold">{profileLabel(activeProfile)}</ThemedText>
+        </TouchableOpacity>
+      )}
+
       <ThemedView style={styles.titleContainer}>
         <ThemedText type='title' accessibilityRole="header">
           Mad Minute
@@ -53,6 +72,14 @@ export default function HomeScreen() {
         }
       </ThemedView>
 
+      {!shared && (
+        <TouchableOpacity onPress={() => setSheetOpen(true)} accessibilityRole="button" accessibilityLabel="Add another player">
+          <ThemedText style={[styles.privacyLink, { color: muted }]}>Add another player</ThemedText>
+        </TouchableOpacity>
+      )}
+
+      <ProfileSheet visible={sheetOpen} onClose={() => setSheetOpen(false)} />
+
       <TouchableOpacity onPress={() => Linking.openURL(PRIVACY_POLICY_URL).catch(() => {})} accessibilityRole="link" accessibilityLabel="Privacy Policy">
         <ThemedText style={[styles.privacyLink, { color: muted }]}>Privacy Policy</ThemedText>
       </TouchableOpacity>
@@ -65,6 +92,21 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'space-around',
+  },
+
+  chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 999,
+    borderWidth: 1,
+    minHeight: 44,
+  },
+
+  chipEmoji: {
+    fontSize: 22,
   },
 
   titleContainer: {
