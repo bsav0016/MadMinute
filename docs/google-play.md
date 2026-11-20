@@ -27,6 +27,9 @@ eas build --platform android --profile production   # produces an .aab
   - Personal best badges for each setup.
   - History with accuracy by operation, your trouble spots, and a 1 x 1 to 12 x 12 times table coloured by how well you know each fact.
   - Optional Focus mode that mixes in the problems you miss most.
+  - Up to 12 players on one device, each with their own settings, history and personal bests. Back up a player's progress as text and restore it on a new phone.
+  - Works with a screen reader and large text, with marks and patterns as well as colour.
+  - Share your result with one tap.
 
   No ads, no account, no tracking. Your history stays on your device.
 
@@ -42,3 +45,21 @@ eas build --platform android --profile production   # produces an .aab
 - **Target audience:** if you include children under 13, Play's Families policy applies. The app has no ads, accounts or tracking, but decide this deliberately.
 - **Permissions:** none requested.
 - **New personal accounts:** Play requires a closed test with at least 12 testers opted in for 14 days before you can apply for production access.
+
+## 1.4.0 release notes (Play, 500 limit)
+
+```
+<en-US>
+- Players: up to 12 players on one device, each with their own history and personal bests. Names come from a list, so no personal details.
+- Back up and restore a player's progress as text.
+- Screen reader labels, large-text layouts, and marks so results don't rely on colour.
+- Trouble spots, Focus mode and Share score.
+- Fixes can now arrive without a store update.
+</en-US>
+```
+
+## 1.4.0 declarations
+
+- **Data safety:** still no data collected and no data shared. The update check to Expo's update service is a standard network request, described in the privacy policy (effective 20 November 2026); the app sends no user data with it.
+- **Families/COPPA:** no names are typed or stored (players are named from a fixed list), no account, ads or analytics.
+- **Hardware warning:** Play may warn that portrait and Wi-Fi are required hardware features; see Discores PR #75 for the config plugin that marks them optional. It is safe to proceed.
