@@ -40,6 +40,12 @@ Notes:
 > - A 1 x 1 to 12 x 12 times table coloured by how well you know each fact
 > - Optional Focus mode that mixes in the problems you miss most
 >
+> FOR FAMILIES AND CLASSROOMS
+> - Up to 12 players on one device, each with their own settings, history and personal bests (players get a name from a list, so no personal details are entered)
+> - Back up a player's progress as text and restore it on a new phone
+> - Works with a screen reader and large text, with marks and patterns as well as colour
+> - Share your result with one tap
+>
 > No ads, no account and no tracking. Your history stays on your device.
 >
 > Need paper? Free printable mad minute worksheets with answer keys are at bsav0016.github.io/MadMinute.
@@ -53,3 +59,21 @@ The README screenshots in `docs/screenshots/` are the source set (home, settings
 table, focus). For the store, the first three images are what search results show: lead with a question in progress, the
 results screen with a personal best, and the coloured times table, each with a short caption ("Beat your best in a
 minute", "See what you missed", "Know your times tables").
+
+## 1.4.0 What's New (Apple, 4000 limit)
+
+```
+- Players: add up to 12 players on one device. Each keeps their own settings, history and personal bests. Names are chosen from a list, so no personal details are needed.
+- Back up and restore: copy a player's progress as text and restore it on a new phone.
+- Easier to use: screen reader labels, layouts that fit large text, and marks and patterns so results never rely on colour alone.
+- Trouble spots and Focus mode: see the problems you miss most and practise them.
+- Share your score from the results screen.
+- Behind the scenes: the app can now receive fixes without a store update.
+```
+
+## 1.4.0 App Store privacy answers
+
+- **Data Not Collected** stays the answer. The app has no accounts and sends nothing about the person using it. The only network request is the update check to Expo's update service (EAS Update), which carries the usual request information such as the IP address, the app version and the platform; it is disclosed in the privacy policy (effective 20 November 2026).
+- Not in the Kids Category and no age-targeting claims; keep it that way unless you decide to enter it on purpose.
+- Players get names from a fixed list (30 words and 8 animals), so no names are typed or stored: there is no child name to declare.
+- No demo account is needed for App Review (there are no accounts). Review note: "There is no sign-in. Open the home screen and tap the player chip to add players; the results screen has Share Score and, in History, trouble spots."
