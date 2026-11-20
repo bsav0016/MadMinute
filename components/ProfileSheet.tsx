@@ -1,16 +1,24 @@
 import React, { useState } from "react";
-import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+    Alert, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Share, StyleSheet, Text, TextInput, TouchableOpacity, useWindowDimensions, View,
+} from "react-native";
 import { ThemedText } from "@/components/ThemedText";
 import { GeneralButton } from "@/components/GeneralButton";
 import { useThemeColor } from "@/hooks/useThemeColor";
-import { useMadMinute } from "@/contexts/MadMinuteContext/MadMinuteContext";
+import { Colors } from "@/constants/Colors";
+import { ImportResult, useMadMinute } from "@/contexts/MadMinuteContext/MadMinuteContext";
+import { Backup, readBackup } from "@/contexts/MadMinuteContext/backup";
 import {
     avatarInfo, AvatarId, AVATARS, MAX_PROFILES, Profile, profileLabel, randomTitle, Title, titlesTaken,
 } from "@/storage/profiles";
 
 // The sheet shows the list of players, or the form for adding or editing one. A new player's animal and word are
 // picked when the form opens, so they are not random on every render.
-type Panel = { kind: "list" } | { kind: "add"; avatar: AvatarId; title: Title } | { kind: "edit"; id: string };
+type Panel =
+    | { kind: "list" }
+    | { kind: "add"; avatar: AvatarId; title: Title }
+    | { kind: "edit"; id: string }
+    | { kind: "restore" };
 
 interface ProfileSheetProps {
     visible: boolean;
@@ -20,12 +28,15 @@ interface ProfileSheetProps {
 // Who is playing: switch between the people who share this device, add someone, change a player's animal or word, or
 // delete a player.
 export function ProfileSheet({ visible, onClose }: ProfileSheetProps) {
-    const { profiles, activeProfile, addProfile, switchProfile, changeProfile, removeProfile } = useMadMinute();
+    const {
+        profiles, activeProfile, addProfile, switchProfile, changeProfile, removeProfile, exportProgress, importProgress,
+    } = useMadMinute();
     const surface = useThemeColor({}, "surface");
     const border = useThemeColor({}, "border");
     const muted = useThemeColor({}, "muted");
     const tint = useThemeColor({}, "tint");
     const background = useThemeColor({}, "background");
+    const { height: windowHeight } = useWindowDimensions();
     const [view, setView] = useState<Panel>({ kind: "list" });
 
     // Closing always goes back to the list, so the sheet opens on it next time.
@@ -42,6 +53,21 @@ export function ProfileSheet({ visible, onClose }: ProfileSheetProps) {
     const openAddForm = () => {
         const avatar = (AVATARS.find(a => !profiles.some(p => p.avatar === a.id)) ?? AVATARS[0]).id;
         setView({ kind: "add", avatar, title: randomTitle(titlesTaken(registry, avatar)) });
+    };
+
+    // Shares the active player's progress as text. Closing the share sheet without sending is not an error.
+    const backUp = async () => {
+        try {
+            await Share.share({ message: exportProgress() });
+        } catch {
+            Alert.alert("Could not share", "Mad Minute could not open the share sheet. Try again.");
+        }
+    };
+
+    const restore = async (backup: Backup): Promise<ImportResult> => {
+        const result = await importProgress(backup);
+        if (result.ok) close();
+        return result;
     };
 
     const choose = (profile: Profile) => {
@@ -105,6 +131,9 @@ export function ProfileSheet({ visible, onClose }: ProfileSheetProps) {
                 deleteLabel={`Delete ${profileLabel(editing)}`}
             />
         );
+    } else if (view.kind === "restore") {
+        title = "Restore progress";
+        body = <RestoreForm key="restore" onRestore={restore} onBack={toList} />;
     } else {
         body = (
             <>
@@ -141,6 +170,11 @@ export function ProfileSheet({ visible, onClose }: ProfileSheetProps) {
                 {profiles.length < MAX_PROFILES && (
                     <GeneralButton title="Add a player" fontSize={16} onPress={() => openAddForm()} />
                 )}
+                <ThemedText style={{ color: muted }}>
+                    Back up {profileLabel(activeProfile)}'s progress to keep it safe or move it to another phone.
+                </ThemedText>
+                <GeneralButton title="Back up progress" variant="secondary" fontSize={16} onPress={backUp} />
+                <GeneralButton title="Restore progress" variant="secondary" fontSize={16} onPress={() => setView({ kind: "restore" })} />
                 <GeneralButton title="Close" variant="secondary" fontSize={16} onPress={close} />
             </>
         );
@@ -149,13 +183,67 @@ export function ProfileSheet({ visible, onClose }: ProfileSheetProps) {
     return (
         <Modal visible={visible} transparent animationType="slide" onRequestClose={close}>
             <Pressable style={styles.backdrop} onPress={close} accessibilityRole="button" accessibilityLabel="Close" />
-            <View style={[styles.sheet, { backgroundColor: background }]}>
-                <ScrollView contentContainerStyle={styles.content}>
-                    <ThemedText type="subtitle" accessibilityRole="header">{title}</ThemedText>
-                    {body}
-                </ScrollView>
-            </View>
+            <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined}>
+                <View style={[styles.sheet, { backgroundColor: background, maxHeight: windowHeight * 0.85 }]}>
+                    <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+                        <ThemedText type="subtitle" accessibilityRole="header">{title}</ThemedText>
+                        {body}
+                    </ScrollView>
+                </View>
+            </KeyboardAvoidingView>
         </Modal>
+    );
+}
+
+interface RestoreFormProps {
+    onRestore: (backup: Backup) => Promise<ImportResult>;
+    onBack: () => void;
+}
+
+// Paste a backup and add it as a new player. Nothing existing is replaced.
+function RestoreForm({ onRestore, onBack }: RestoreFormProps) {
+    const surface = useThemeColor({}, "surface");
+    const border = useThemeColor({}, "border");
+    const muted = useThemeColor({}, "muted");
+    const text = useThemeColor({}, "text");
+    const [pasted, setPasted] = useState("");
+    const [error, setError] = useState<string | null>(null);
+    const [busy, setBusy] = useState(false);
+
+    const submit = async () => {
+        const read = readBackup(pasted);
+        if (!read.ok) {
+            setError(read.reason);
+            return;
+        }
+        setBusy(true);
+        const result = await onRestore(read.backup);
+        setBusy(false);
+        if (!result.ok) setError(result.reason);
+    };
+
+    return (
+        <>
+            <ThemedText style={{ color: muted }}>
+                Paste a Mad Minute backup below. It is added as a new player, so no one's progress is replaced.
+            </ThemedText>
+            <TextInput
+                style={[styles.pasteBox, { backgroundColor: surface, borderColor: border, color: text }]}
+                value={pasted}
+                onChangeText={(value) => { setPasted(value); setError(null); }}
+                multiline
+                numberOfLines={5}
+                autoCapitalize="none"
+                autoCorrect={false}
+                spellCheck={false}
+                placeholder="Paste the backup here"
+                placeholderTextColor={muted}
+                accessibilityLabel="Backup text"
+            />
+            {error && <ThemedText accessibilityRole="alert" style={styles.error}>{error}</ThemedText>}
+            <GeneralButton title="Restore" fontSize={16} onPress={submit} disabled={pasted.trim() === "" || busy} />
+            <GeneralButton title="Back" variant="secondary" fontSize={16} onPress={onBack} />
+        </>
     );
 }
 
@@ -228,7 +316,6 @@ function PlayerForm({ initialAvatar, initialTitle, titlesTaken, submitLabel, onS
 const styles = StyleSheet.create({
     backdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.4)" },
     sheet: {
-        maxHeight: "85%",
         borderTopLeftRadius: 24,
         borderTopRightRadius: 24,
     },
@@ -252,6 +339,16 @@ const styles = StyleSheet.create({
         borderRadius: 14,
         minHeight: 56,
     },
+    pasteBox: {
+        minHeight: 120,
+        maxHeight: 200,
+        borderWidth: 1,
+        borderRadius: 14,
+        padding: 12,
+        fontSize: 16,
+        textAlignVertical: "top",
+    },
+    error: { color: Colors.results.incorrectStrong },
     grid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
     avatarButton: {
         width: "22%",

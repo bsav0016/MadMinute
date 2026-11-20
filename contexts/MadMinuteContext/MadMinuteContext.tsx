@@ -9,10 +9,14 @@ import { clearFacts, loadFacts, saveFacts } from './factStorage';
 import { MadMinuteQuestion } from './MadMinuteQuestion';
 import { focusPool } from './focus';
 import {
-    addProfile as addToRegistry, AvatarId, changeProfile as changeInRegistry, defaultRegistry, loadRegistry, Profile, ProfileRegistry,
-    removeProfile as removeFromRegistry, removeProfileData, saveRegistry, switchProfile as switchInRegistry, Title,
+    addProfile as addToRegistry, AvatarId, changeProfile as changeInRegistry, defaultRegistry, loadRegistry, MAX_PROFILES,
+    newProfileId, Profile, profileLabel, ProfileRegistry, randomTitle, removeProfile as removeFromRegistry,
+    removeProfileData, saveRegistry, switchProfile as switchInRegistry, Title, titlesTaken,
 } from '@/storage/profiles';
+import { Backup, buildBackupText } from './backup';
 
+
+export type ImportResult = { ok: true; label: string } | { ok: false; reason: string };
 
 interface MadMinuteContextType {
     madMinute: MadMinuteClass;
@@ -32,6 +36,9 @@ interface MadMinuteContextType {
     switchProfile: (id: string) => void;
     changeProfile: (id: string, avatar: AvatarId, title: Title) => void;
     removeProfile: (id: string) => void;
+    // The active player's progress as text to share, and a way to bring a backup back in as a new player.
+    exportProgress: () => string;
+    importProgress: (backup: Backup) => Promise<ImportResult>;
 }
 
 const initialRegistry = defaultRegistry(0);
@@ -53,6 +60,8 @@ const MadMinuteContext = createContext<MadMinuteContextType>({
     switchProfile: () => {},
     changeProfile: () => {},
     removeProfile: () => {},
+    exportProgress: () => '',
+    importProgress: async () => ({ ok: false, reason: '' }),
 });
 
 const newRoundId = () => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
@@ -294,11 +303,52 @@ export const MadMinuteProvider: React.FC<{ children: ReactNode }> = ({ children 
 
     const activeProfile = registry.profiles.find((profile) => profile.id === registry.active) ?? registry.profiles[0];
 
+    const exportProgress = (): string => buildBackupText({
+        exportedAt: Date.now(),
+        profile: { id: activeProfile.id, avatar: activeProfile.avatar, title: activeProfile.title },
+        settings: madMinute.settings,
+        history,
+        facts,
+    });
+
+    // Adds a backup as a new player and switches to them. The id is kept if this device has no such player (so a
+    // restore after a reinstall is the same player again), otherwise the copy gets its own, and if the name is taken
+    // the word changes. The data is saved first, so the new player opens with it.
+    const importProgress = async (backup: Backup): Promise<ImportResult> => {
+        if (!registryReady.current) return { ok: false, reason: 'Mad Minute is still starting. Try again in a moment.' };
+        const current = registryRef.current;
+        if (current.profiles.length >= MAX_PROFILES) {
+            return { ok: false, reason: `This device already has ${MAX_PROFILES} players. Delete one first.` };
+        }
+        const id = current.profiles.some((p) => p.id === backup.profile.id) ? newProfileId() : backup.profile.id;
+        const { avatar } = backup.profile;
+        const taken = titlesTaken(current, avatar);
+        const title = taken.includes(backup.profile.title) ? randomTitle(taken) : backup.profile.title;
+
+        const saved = await Promise.all([
+            saveHistory(backup.history, id),
+            saveFacts(backup.facts, id),
+            backup.settings ? saveSettings(backup.settings, id) : Promise.resolve(true),
+        ]);
+        if (!saved.every(Boolean)) {
+            await removeProfileData(id);
+            return { ok: false, reason: 'Could not save the backup on this device. Free up some space and try again.' };
+        }
+        // The list may have changed while the data was saving.
+        const next = addToRegistry(registryRef.current, avatar, title, Date.now(), id);
+        if (next === registryRef.current) {
+            await removeProfileData(id);
+            return { ok: false, reason: 'Could not add the player. Try again.' };
+        }
+        applyRegistry(next);
+        return { ok: true, label: profileLabel({ avatar, title }) };
+    };
+
     return (
         <MadMinuteContext.Provider value={{
             madMinute, updateSettings, addQuestion, submitResponse, markQuestionShown, resetMadMinute, history, recordRound,
             clearHistory, facts, profiles: registry.profiles, activeProfile, addProfile, switchProfile, changeProfile,
-            removeProfile,
+            removeProfile, exportProgress, importProgress,
         }}>
             {children}
         </MadMinuteContext.Provider>
