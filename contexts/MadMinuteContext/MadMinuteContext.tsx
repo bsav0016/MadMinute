@@ -8,6 +8,8 @@ import { applyRound, FactStats } from './factStats';
 import { clearFacts, loadFacts, saveFacts } from './factStorage';
 import { MadMinuteQuestion } from './MadMinuteQuestion';
 import { focusPool } from './focus';
+import { emptyPractice, Goal, PracticeRecord, recordPracticeRound, withGoal } from './practice';
+import { clearPractice, loadPractice, savePractice } from './practiceStorage';
 import {
     addProfile as addToRegistry, AvatarId, changeProfile as changeInRegistry, defaultRegistry, loadRegistry, MAX_PROFILES,
     newProfileId, Profile, profileLabel, ProfileRegistry, randomTitle, removeProfile as removeFromRegistry,
@@ -29,6 +31,9 @@ interface MadMinuteContextType {
     recordRound: () => RoundRecord | null;
     clearHistory: () => void;
     facts: FactStats;
+    // The daily goal and streak (see practice.ts), and a way to change the goal.
+    practice: PracticeRecord;
+    setGoal: (goal: Goal) => void;
     // The people who share this device. Each has their own settings, history and record of problems.
     profiles: Profile[];
     activeProfile: Profile;
@@ -54,6 +59,8 @@ const MadMinuteContext = createContext<MadMinuteContextType>({
     recordRound: () => null,
     clearHistory: () => {},
     facts: {},
+    practice: emptyPractice(),
+    setGoal: () => {},
     profiles: initialRegistry.profiles,
     activeProfile: initialRegistry.profiles[0],
     addProfile: () => {},
@@ -173,6 +180,46 @@ export const MadMinuteProvider: React.FC<{ children: ReactNode }> = ({ children 
         });
     }, [registryLoaded, profileId]);
 
+    // The daily goal and streak. Like the facts, they are loaded at launch and added to once per finished round.
+    const [practice, setPractice] = useState<PracticeRecord>(() => emptyPractice());
+    const practiceRef = useRef<PracticeRecord>(practice);
+    const practiceLoaded = useRef(false);
+    // When rounds finished before the saved record loaded, so the load can add them on top of what it finds.
+    const practiceRoundsBeforeLoad = useRef<number[]>([]);
+    // A goal picked before the load finishes wins over the saved one.
+    const goalBeforeLoad = useRef<Goal | null>(null);
+    // Bumped when the record is cleared or the profile changes, so a load that was already running cannot bring the old one back.
+    const practiceGeneration = useRef(0);
+
+    const changePractice = (next: PracticeRecord) => {
+        practiceRef.current = next;
+        setPractice(next);
+    };
+
+    useEffect(() => {
+        if (!registryLoaded) return;
+        const generation = practiceGeneration.current;
+        loadPractice(profileId).then((saved) => {
+            if (generation !== practiceGeneration.current) return; // cleared or switched while loading
+            practiceLoaded.current = true;
+            const queued = practiceRoundsBeforeLoad.current;
+            practiceRoundsBeforeLoad.current = [];
+            const goal = goalBeforeLoad.current;
+            goalBeforeLoad.current = null;
+            if (!saved && queued.length === 0 && goal === null) return;
+            let merged = queued.reduce(recordPracticeRound, saved ?? emptyPractice());
+            if (goal !== null) merged = withGoal(merged, goal);
+            changePractice(merged);
+            if (queued.length > 0 || goal !== null) savePractice(merged, profileId);
+        });
+    }, [registryLoaded, profileId]);
+
+    const setGoal = (goal: Goal) => {
+        changePractice(withGoal(practiceRef.current, goal));
+        if (practiceLoaded.current) savePractice(practiceRef.current, registryRef.current.active);
+        else goalBeforeLoad.current = goal;
+    };
+
     const updateSettings = (newSettings: MadMinuteSettings) => {
         settingsChanged.current = true;
         saveForActiveProfile((id) => saveSettings(newSettings, id));
@@ -248,6 +295,11 @@ export const MadMinuteProvider: React.FC<{ children: ReactNode }> = ({ children 
                 // Saving now would overwrite facts that have not loaded yet. The load applies this round and saves.
                 roundsBeforeLoad.current.push({ questions: madMinute.questions, playedAt });
             }
+
+            const nextPractice = recordPracticeRound(practiceRef.current, playedAt);
+            changePractice(nextPractice);
+            if (practiceLoaded.current) savePractice(nextPractice, registryRef.current.active);
+            else practiceRoundsBeforeLoad.current.push(playedAt);
         }
         return record;
     };
@@ -263,6 +315,15 @@ export const MadMinuteProvider: React.FC<{ children: ReactNode }> = ({ children 
         roundsBeforeLoad.current = [];
         changeFacts({});
         clearFacts(registryRef.current.active);
+        // The streak is made of the same rounds, so it starts again too (the goal the player chose stays).
+        const goal = practiceRef.current.goal;
+        practiceGeneration.current += 1;
+        practiceLoaded.current = true;
+        practiceRoundsBeforeLoad.current = [];
+        goalBeforeLoad.current = null;
+        changePractice(withGoal(emptyPractice(), goal));
+        if (goal === emptyPractice().goal) clearPractice(registryRef.current.active);
+        else savePractice(practiceRef.current, registryRef.current.active);
     };
 
     // Everything held in memory belongs to the profile that was playing, so a switch starts the next one from empty
@@ -276,6 +337,11 @@ export const MadMinuteProvider: React.FC<{ children: ReactNode }> = ({ children 
         factsLoaded.current = false;
         roundsBeforeLoad.current = [];
         changeFacts({});
+        practiceGeneration.current += 1;
+        practiceLoaded.current = false;
+        practiceRoundsBeforeLoad.current = [];
+        goalBeforeLoad.current = null;
+        changePractice(emptyPractice());
         roundId.current = newRoundId();
         recordedRound.current = null;
         setMadMinute(new MadMinuteClass());
@@ -347,7 +413,7 @@ export const MadMinuteProvider: React.FC<{ children: ReactNode }> = ({ children 
     return (
         <MadMinuteContext.Provider value={{
             madMinute, updateSettings, addQuestion, submitResponse, markQuestionShown, resetMadMinute, history, recordRound,
-            clearHistory, facts, profiles: registry.profiles, activeProfile, addProfile, switchProfile, changeProfile,
+            clearHistory, facts, practice, setGoal, profiles: registry.profiles, activeProfile, addProfile, switchProfile, changeProfile,
             removeProfile, exportProgress, importProgress,
         }}>
             {children}

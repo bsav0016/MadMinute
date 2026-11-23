@@ -7,6 +7,7 @@ export const STORAGE_KEYS = {
     settings: "madminute.settings",
     history: "madminute.history",
     facts: "madminute.facts",
+    practice: "madminute.practice",
     review: "madminute.review",
     profiles: "madminute.profiles",
 } as const;

@@ -13,18 +13,19 @@ const start = defaultRegistry(1000);
 describe('profile keys', () => {
     it('keeps the default profile on the keys used before profiles existed', () => {
         expect(profileKeys(DEFAULT_PROFILE_ID)).toEqual({
-            settings: STORAGE_KEYS.settings, history: STORAGE_KEYS.history, facts: STORAGE_KEYS.facts,
+            settings: STORAGE_KEYS.settings, history: STORAGE_KEYS.history, facts: STORAGE_KEYS.facts, practice: STORAGE_KEYS.practice,
         });
         expect(STORAGE_KEYS.settings).toBe('madminute.settings');
         expect(STORAGE_KEYS.history).toBe('madminute.history');
         expect(STORAGE_KEYS.facts).toBe('madminute.facts');
+        expect(STORAGE_KEYS.practice).toBe('madminute.practice');
     });
 
     it('gives every other profile keys of its own', () => {
         const a = profileKeys('pa1');
         const b = profileKeys('pb2');
         const all = [...Object.values(a), ...Object.values(b), ...Object.values(profileKeys(DEFAULT_PROFILE_ID))];
-        expect(new Set(all).size).toBe(9);
+        expect(new Set(all).size).toBe(12);
     });
 });
 

@@ -151,15 +151,16 @@ export interface ProfileKeys {
     settings: string;
     history: string;
     facts: string;
+    practice: string;
 }
 
 // Where a profile's data lives. The default profile keeps the original keys.
 export function profileKeys(profileId: string): ProfileKeys {
     if (profileId === DEFAULT_PROFILE_ID) {
-        return { settings: STORAGE_KEYS.settings, history: STORAGE_KEYS.history, facts: STORAGE_KEYS.facts };
+        return { settings: STORAGE_KEYS.settings, history: STORAGE_KEYS.history, facts: STORAGE_KEYS.facts, practice: STORAGE_KEYS.practice };
     }
     const prefix = `madminute.p.${profileId}`;
-    return { settings: `${prefix}.settings`, history: `${prefix}.history`, facts: `${prefix}.facts` };
+    return { settings: `${prefix}.settings`, history: `${prefix}.history`, facts: `${prefix}.facts`, practice: `${prefix}.practice` };
 }
 
 export function loadRegistry(): Promise<ProfileRegistry | null> {
@@ -173,5 +174,5 @@ export function saveRegistry(registry: ProfileRegistry): Promise<boolean> {
 // Deletes everything saved for one profile.
 export async function removeProfileData(profileId: string): Promise<void> {
     const keys = profileKeys(profileId);
-    await Promise.all([removeStored(keys.settings), removeStored(keys.history), removeStored(keys.facts)]);
+    await Promise.all([removeStored(keys.settings), removeStored(keys.history), removeStored(keys.facts), removeStored(keys.practice)]);
 }
