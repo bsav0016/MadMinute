@@ -1,5 +1,8 @@
 import { emptyPractice, goalProgress, nextGoal, PracticeRecord, recordPracticeRound, withGoal } from '../practice';
-import { goalMarks, goalText, hasPlayed, practiceSummary, streakText } from '../practiceText';
+import {
+    goalMarks, goalText, hasPlayed, levelMark, levelUpText, levelWord, practiceSummary, streakText, tableRowText,
+} from '../practiceText';
+import { TableStatus } from '../practice';
 
 const at = (day: number, hour = 12) => new Date(2026, 10, day, hour).getTime();
 const play = (record: PracticeRecord, ...times: number[]) => times.reduce(recordPracticeRound, record);
@@ -68,5 +71,28 @@ describe('hasPlayed', () => {
         expect(hasPlayed(emptyPractice())).toBe(false);
         expect(hasPlayed(withGoal(emptyPractice(), 3))).toBe(false);
         expect(hasPlayed(play(emptyPractice(), at(23)))).toBe(true);
+    });
+});
+
+describe('the words for the table levels', () => {
+    const status = (level: TableStatus['level'], solid = 0, started = 0): TableStatus => ({ table: 7, level, solid, started });
+
+    it('give every level a word and a different mark', () => {
+        const levels = ['new', 'learning', 'known', 'mastered'] as const;
+        expect(levels.map(levelWord)).toEqual(['Not started', 'Learning', 'Known', 'Mastered']);
+        expect(new Set(levels.map(levelMark)).size).toBe(4);
+    });
+
+    it('read as a row for a screen reader', () => {
+        expect(tableRowText(status('new'))).toBe('7s: Not started');
+        expect(tableRowText(status('learning', 8, 10))).toBe('7s: Learning, 8 of 12 facts solid');
+        expect(tableRowText(status('mastered', 12, 12))).toBe('7s: Mastered, 12 of 12 facts solid');
+    });
+
+    it('say a level-up only when a table is known or mastered', () => {
+        expect(levelUpText(status('known'))).toBe('You know your 7s now!');
+        expect(levelUpText(status('mastered'))).toBe('You have mastered the 7s!');
+        expect(levelUpText(status('learning'))).toBeNull();
+        expect(levelUpText(status('new'))).toBeNull();
     });
 });
