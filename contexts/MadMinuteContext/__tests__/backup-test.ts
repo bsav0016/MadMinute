@@ -19,6 +19,7 @@ const sample = (): Backup => ({
     settings: new MadMinuteSettings(2, 12, [MadMinuteOperator.Multiplication], 120, true),
     history: [round('r2'), round('r1')],
     facts: FACTS,
+    practice: null,
 });
 
 // Re-encodes edited data with a matching checksum, to test what is inside rather than the wrapper.
@@ -58,7 +59,7 @@ describe('backup text', () => {
 
     it('holds nothing but the progress: no device, account or contact details', () => {
         const json = atob(buildBackupText(sample()).split('.').pop()!);
-        expect(Object.keys(JSON.parse(json)).sort()).toEqual(['exportedAt', 'facts', 'history', 'profile', 'settings', 'v']);
+        expect(Object.keys(JSON.parse(json)).sort()).toEqual(['exportedAt', 'facts', 'history', 'practice', 'profile', 'settings', 'v']);
     });
 
     it('round-trips a player with no saved settings', () => {

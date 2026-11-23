@@ -175,7 +175,7 @@ describe('backing up and restoring a player', () => {
 
     it('asks to try again if it is used before the saved players have loaded', async () => {
         const api = mount();
-        const backup: Backup = { exportedAt: 1, profile: { id: 'pnew', avatar: 'owl', title: 'Epic' }, settings: null, history: [], facts: {} };
+        const backup: Backup = { exportedAt: 1, profile: { id: 'pnew', avatar: 'owl', title: 'Epic' }, settings: null, history: [], facts: {}, practice: null };
         let result!: Imported;
         await act(async () => { result = await api().importProgress(backup); });
         expect(result.ok).toBe(false);

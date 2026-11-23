@@ -2,6 +2,7 @@ import { FactStats, parseFacts } from "./factStats";
 import { MadMinuteSettings } from "./MadMinuteSettings";
 import { parseSettings } from "./settingsStorage";
 import { parseHistory, RoundRecord } from "./roundRecord";
+import { parsePractice, PracticeRecord } from "./practice";
 import { AvatarId, parseRegistry, profileLabel, Title } from "@/storage/profiles";
 
 // A backup of one player's progress as a block of text, to be sent through the share sheet (to Notes, Mail, Messages,
@@ -13,7 +14,8 @@ import { AvatarId, parseRegistry, profileLabel, Title } from "@/storage/profiles
 // catches a copy that was changed on the way. Line breaks inside the data are ignored.
 
 export const BACKUP_PREFIX = "MADMINUTE1";
-export const BACKUP_VERSION = 1;
+// Version 2 adds the daily goal and streak (practice). Backups from version 1 have none and still restore.
+export const BACKUP_VERSION = 2;
 // A full history and fact record is about 100 KB. Anything far past that is not one of ours.
 export const MAX_BACKUP_CHARS = 2_000_000;
 
@@ -29,6 +31,7 @@ export interface Backup {
     settings: MadMinuteSettings | null;
     history: RoundRecord[];
     facts: FactStats;
+    practice: PracticeRecord | null; // null for a backup made before the practice path existed
 }
 
 export type BackupResult = { ok: true; backup: Backup } | { ok: false; reason: string };
@@ -59,6 +62,7 @@ export function buildBackupText(backup: Backup): string {
         settings,
         history: backup.history,
         facts: backup.facts,
+        practice: backup.practice,
     });
     const encoded = btoa(json);
     const rounds = backup.history.length;
@@ -120,6 +124,8 @@ export function readBackup(text: string): BackupResult {
     const facts = parseFacts(data.facts);
     if (history === null || facts === null) return { ok: false, reason: NOT_A_BACKUP };
     const settings = data.settings === null || data.settings === undefined ? null : parseSettings(data.settings);
+    // The streak is a nice-to-have: one that cannot be read is left out and the rest of the backup still restores.
+    const practice = data.practice === null || data.practice === undefined ? null : parsePractice(data.practice);
 
-    return { ok: true, backup: { exportedAt: data.exportedAt, profile: { id, avatar, title }, settings, history, facts } };
+    return { ok: true, backup: { exportedAt: data.exportedAt, profile: { id, avatar, title }, settings, history, facts, practice } };
 }
