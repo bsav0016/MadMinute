@@ -10,6 +10,8 @@ import { PracticeCard } from "@/components/PracticeCard";
 import { ProfileSheet } from "@/components/ProfileSheet";
 import { useMadMinute } from "@/contexts/MadMinuteContext/MadMinuteContext";
 import { avatarInfo, profileLabel } from "@/storage/profiles";
+import { nextPractice } from "@/contexts/MadMinuteContext/practice";
+import { hasPlayed, practiceHint } from "@/contexts/MadMinuteContext/practiceText";
 
 const PRIVACY_POLICY_URL = "https://bsav0016.github.io/MadMinute/privacy";
 
@@ -19,10 +21,17 @@ export default function HomeScreen() {
   const border = useThemeColor({}, 'border');
   const muted = useThemeColor({}, 'muted');
   const tint = useThemeColor({}, 'tint');
-  const { profiles, activeProfile } = useMadMinute();
+  const { profiles, activeProfile, practice, facts, madMinute, startPractice } = useMadMinute();
   const [sheetOpen, setSheetOpen] = useState(false);
   // Someone playing alone sees no extra controls beyond a small link to add a second player.
   const shared = profiles.length > 1;
+
+  // "Today's practice" is offered once the player has finished a round, like the goal card, so a new install looks as ever.
+  const todaysPractice = hasPlayed(practice) ? nextPractice(facts, madMinute.settings) : null;
+  const playToday = () => {
+    startPractice();
+    routeTo(Routes.PlayMadMinute);
+  };
 
   const homeButtons = [
     { title: "Start", route: Routes.CreateMadMinute, variant: 'primary' as const },
@@ -63,13 +72,19 @@ export default function HomeScreen() {
       <PracticeCard />
 
       <ThemedView style={styles.homeButtonView}>
+        {todaysPractice && (
+          <>
+            <GeneralButton title="Today's practice" onPress={playToday} autoWidth={false} variant="primary" />
+            <ThemedText style={[styles.hint, { color: muted }]}>{practiceHint(todaysPractice)}</ThemedText>
+          </>
+        )}
         {homeButtons.map((homeButton) => (
           <GeneralButton
             key={homeButton.title}
             title={homeButton.title}
             onPress={() => routeTo(homeButton.route)}
             autoWidth={false}
-            variant={homeButton.variant}
+            variant={todaysPractice && homeButton.title === "Start" ? 'secondary' : homeButton.variant}
           />
         ))
         }
@@ -139,6 +154,12 @@ const styles = StyleSheet.create({
     fontSize: 48,
     lineHeight: 56,
     fontWeight: '800',
+  },
+
+  hint: {
+    fontSize: 14,
+    textAlign: 'center',
+    marginBottom: 4,
   },
 
   privacyLink: {

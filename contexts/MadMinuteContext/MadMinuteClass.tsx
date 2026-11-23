@@ -2,6 +2,7 @@ import { MadMinuteSettings } from "./MadMinuteSettings";
 import { MadMinuteQuestion, isSameFact } from "./MadMinuteQuestion";
 import { MadMinuteOperator } from "./MadMinuteOperator";
 import { FOCUS_SHARE, questionForFact } from "./focus";
+import { TABLE_FACTS } from "./practice";
 import { ParsedFact } from "./factStats";
 import { getFirstDivisionInt, getRandomInt, getSecondDivisionInt, getSubtractionInt } from "./randomIntUtils";
 
@@ -12,13 +13,24 @@ const MAX_REDRAWS = 25;
 export class MadMinuteClass {
     settings: MadMinuteSettings;
     questions: MadMinuteQuestion[];
+    // A round of one times table ("Practice the 7s"). It is not a setting: the usual setup of the player is kept as it
+    // was, and the round just ignores its operators and range.
+    table: number | null;
 
     constructor(
-        settings: MadMinuteSettings = new MadMinuteSettings(), 
-        questions: MadMinuteQuestion[] = []
+        settings: MadMinuteSettings = new MadMinuteSettings(),
+        questions: MadMinuteQuestion[] = [],
+        table: number | null = null
     ) {
         this.settings = settings
         this.questions = questions
+        this.table = table
+    }
+
+    /** The setup the round is really played with, which is what is written in the history. */
+    effectiveSettings(): MadMinuteSettings {
+        if (this.table === null) return this.settings;
+        return new MadMinuteSettings(1, TABLE_FACTS, [MadMinuteOperator.Multiplication], this.settings.durationSeconds, false);
     }
 
     /** The next question. It is never the same fact as the one before it unless no other question is possible.
@@ -39,6 +51,11 @@ export class MadMinuteClass {
 
         if (weakSpots.length > 0 && random() < FOCUS_SHARE) {
             return questionForFact(weakSpots[Math.floor(random() * weakSpots.length)], id, now, random);
+        }
+
+        if (this.table !== null) {
+            const other = 1 + Math.min(TABLE_FACTS - 1, Math.floor(random() * TABLE_FACTS));
+            return questionForFact({ operator: MadMinuteOperator.Multiplication, value1: this.table, value2: other }, id, now, random);
         }
 
         const operatorIndex = 

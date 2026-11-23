@@ -6,6 +6,10 @@ import { MadMinuteProvider, useMadMinute } from '@/contexts/MadMinuteContext/Mad
 import { savePractice, loadPractice } from '@/contexts/MadMinuteContext/practiceStorage';
 import { emptyPractice, recordPracticeRound, withGoal } from '@/contexts/MadMinuteContext/practice';
 import { expectControlsNamed } from '@/test-utils/a11y';
+import { saveSettings } from '@/contexts/MadMinuteContext/settingsStorage';
+import { MadMinuteSettings } from '@/contexts/MadMinuteContext/MadMinuteSettings';
+import { MadMinuteOperator } from '@/contexts/MadMinuteContext/MadMinuteOperator';
+import { Routes } from '@/constants/Routes';
 
 jest.mock('@react-native-async-storage/async-storage', () =>
     require('@react-native-async-storage/async-storage/jest/async-storage-mock'));
@@ -105,5 +109,52 @@ describe('the goal and streak on the home screen', () => {
         for (const label of ['Start', 'History']) {
             expect(tree.root.findAll(n => n.props.accessibilityLabel === label && typeof n.props.onPress === 'function').length).toBeGreaterThan(0);
         }
+    });
+});
+
+describe("Today's practice on the home screen", () => {
+    const buttonLabelled = (tree: Tree, label: string) =>
+        tree.root.findAll(n => n.props.accessibilityLabel === label && typeof n.props.onPress === 'function');
+
+    beforeEach(async () => {
+        await AsyncStorage.clear();
+        jest.restoreAllMocks();
+        jest.spyOn(Date, 'now').mockReturnValue(NOW);
+        mockRoute.routeTo.mockClear();
+    });
+
+    it('is not offered to a player who has not finished a round', async () => {
+        const tree = await render();
+        expect(buttonLabelled(tree, "Today's practice")).toHaveLength(0);
+        expect(texts(tree)).not.toContain('Your usual setup');
+    });
+
+    it('is offered above Start once a round is done, and says what it will be', async () => {
+        await savePractice(recordPracticeRound(emptyPractice(), NOW));
+        const tree = await render();
+        expect(buttonLabelled(tree, "Today's practice").length).toBeGreaterThan(0);
+        expect(texts(tree)).toContain('Your usual setup');
+        const labels = tree.root.findAll(n => typeof n.type === 'string' && n.props.accessibilityRole === 'button')
+            .map(n => n.props.accessibilityLabel);
+        expect(labels.indexOf("Today's practice")).toBeLessThan(labels.indexOf('Start'));
+        expectControlsNamed(tree.root);
+    });
+
+    it('names the table for a player who practises multiplication, and starts it', async () => {
+        await saveSettings(new MadMinuteSettings(1, 12, [MadMinuteOperator.Multiplication], 60));
+        await savePractice(recordPracticeRound(emptyPractice(), NOW));
+        const tree = await render();
+        expect(texts(tree)).toContain('The 2 times table');
+        await act(async () => { buttonLabelled(tree, "Today's practice")[0].props.onPress(); });
+        expect(api.madMinute.table).toBe(2);
+        expect(mockRoute.routeTo).toHaveBeenCalledWith(Routes.PlayMadMinute);
+    });
+
+    it('leaves Start as the way to choose a setup, going to the settings', async () => {
+        await savePractice(recordPracticeRound(emptyPractice(), NOW));
+        const tree = await render();
+        await act(async () => { buttonLabelled(tree, 'Start')[0].props.onPress(); });
+        expect(mockRoute.routeTo).toHaveBeenCalledWith(Routes.CreateMadMinute);
+        expect(api.madMinute.table).toBeNull();
     });
 });

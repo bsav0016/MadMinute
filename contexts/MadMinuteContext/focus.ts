@@ -34,6 +34,15 @@ export function focusPool(stats: FactStats, settings: MadMinuteSettings): Parsed
         .slice(0, FOCUS_POOL_SIZE);
 }
 
+/** The weak facts of one times table, worst first, for a round of that table. Not held back until there is a lot on
+ *  record: a fact asked twice and missed is enough to ask it more often. */
+export function tablePool(stats: FactStats, table: number): ParsedFact[] {
+    return weakestFacts(stats, Infinity)
+        .map((spot) => spot.fact)
+        .filter((fact) => fact.operator === MadMinuteOperator.Multiplication && (fact.value1 === table || fact.value2 === table))
+        .slice(0, FOCUS_POOL_SIZE);
+}
+
 /** A question asking the given fact. Addition and multiplication are stored in order, so they are shown either way
  *  round at random. */
 export function questionForFact(
