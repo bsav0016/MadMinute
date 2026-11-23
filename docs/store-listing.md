@@ -33,6 +33,12 @@ Notes:
 > - Set the smallest and largest numbers, from 0 to 20 for quick sums to 1 to 12 for times tables
 > - Quick presets: Easy +/-, Times tables and Mixed
 >
+> A GENTLE DAILY ROUTINE
+> - A daily goal of 1, 2 or 3 rounds and a streak with a built-in rest day, kept on your device
+> - Today's practice: one tap starts the next times table to work on
+> - A level for each times table from 2s to 12s, with a Practice button for each
+> - An optional daily reminder, off until you turn it on
+>
 > SEE WHAT TO WORK ON
 > - Review every question after each round: correct, incorrect and skipped
 > - Personal best badges for each setup, so you are always beating yourself
@@ -42,7 +48,7 @@ Notes:
 >
 > FOR FAMILIES AND CLASSROOMS
 > - Up to 12 players on one device, each with their own settings, history and personal bests (players get a name from a list, so no personal details are entered)
-> - Back up a player's progress as text and restore it on a new phone
+> - Back up a player's progress as text, goal and streak included, and restore it on a new phone
 > - Works with a screen reader and large text, with marks and patterns as well as colour
 > - Share your result with one tap
 >
@@ -59,6 +65,22 @@ The README screenshots in `docs/screenshots/` are the source set (home, settings
 table, focus). For the store, the first three images are what search results show: lead with a question in progress, the
 results screen with a personal best, and the coloured times table, each with a short caption ("Beat your best in a
 minute", "See what you missed", "Know your times tables").
+
+## 1.5.0 What's New (Apple, 4000 limit)
+
+```
+- Daily goal and streak: pick 1, 2 or 3 rounds a day. A built-in rest day means one missed day a week does not end your streak. It all stays on your device.
+- Today's practice: one tap starts a round of the next times table to work on.
+- Times table levels: see where each table from 2s to 12s stands, and practise any of them with one tap.
+- Optional daily reminder, off until you turn it on. It is a notification on your device only.
+- Backups now include your goal and streak.
+```
+
+## 1.5.0 App Store privacy answers
+
+- **Data Not Collected** stays the answer: the goal, streak and reminder time are kept on the device and sent nowhere. The reminder is a local notification (no push notifications from a server, no push token). Permission to show notifications is asked only when the player turns the reminder on. Privacy policy effective 23 November 2026.
+- **Not verified:** Apple's current guidance for streaks, reminders and notifications in apps that children may use. The app is still not in the Kids Category and makes no age-targeting claims. Read the current App Review Guidelines (sections on kids, and on notifications) before submitting; the design is opt-in, local, quiet and names no one, but that is my reading, not Apple's.
+- No demo account needed. Review note: "No sign-in. Play one round, then the home screen shows the daily goal and Today's practice. The daily reminder is off until the switch under Reminder is turned on."
 
 ## 1.4.0 What's New (Apple, 4000 limit)
 

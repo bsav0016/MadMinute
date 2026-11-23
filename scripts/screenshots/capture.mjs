@@ -11,8 +11,8 @@
 // pad is tapped at positions given as fractions of the screen (measured on a Pixel 8).
 // Android demo mode gives a clean status bar (09:00, full battery and signal).
 //
-// SEEDED=1 adds three more shots that need saved data (the focus-mode switch, and the History screen with trouble
-// spots and the times table). Make the data with make-seed.mjs and load it with a temporary local change; see
+// SEEDED=1 adds more shots that need saved data (the focus-mode switch, the History screen with trouble spots, the table
+// levels and the times table, and the daily reminder sheet; the home shot then shows the goal card and Today's practice). Make the data with make-seed.mjs and load it with a temporary local change; see
 // "Regenerating the screenshots" in the README.
 //
 // Environment: SEEDED=1, NIGHT=1 (capture in dark mode), SHOT_DIR (write somewhere other than
@@ -162,11 +162,21 @@ try {
     await waitFor(/% correct/);
     await sleep(800);
     shot('history');
-    swipe(true, 0.6);
+    swipe(true, 0.42);
+    await sleep(600);
+    shot('table-levels');
+    swipe(true, 0.8);
     await sleep(600);
     shot('times-table');
     shell('input', 'keyevent', '4');
     await waitFor('Start');
+    await sleep(500);
+    // The daily reminder sheet, opened from the goal card on the home screen.
+    await tap(/^Reminder: .* \(change\)$/);
+    await waitFor('Done');
+    await sleep(600);
+    shot('reminder');
+    await tap('Done');
     await sleep(500);
   }
 

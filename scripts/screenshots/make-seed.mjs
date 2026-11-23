@@ -56,9 +56,19 @@ history.sort((x, y) => y.playedAt - x.playedAt);
 
 const settings = { minValue: 1, maxValue: 12, availableOperators: ['x', '÷'], durationSeconds: 30, focusOnWeakSpots: true };
 
+// A goal of 2 rounds a day with one played today, a streak of 5 days (the longest was 8), and a reminder at 4 pm. The
+// day is written the way the app does, in the device's own calendar.
+const pad = (n) => String(n).padStart(2, '0');
+const today = new Date(now);
+const day = `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`;
+const practice = { goal: 2, streak: { current: 5, longest: 8, lastDay: day }, today: { day, rounds: 1 }, restWeek: null };
+const reminder = { enabled: true, hour: 16, minute: 0 };
+
 writeFileSync(out, JSON.stringify({
   'madminute.facts': envelope(facts),
   'madminute.history': envelope(history),
   'madminute.settings': envelope(settings),
+  'madminute.practice': envelope(practice),
+  'madminute.reminder': envelope(reminder),
 }));
 console.log(`wrote ${path.relative(process.cwd(), out)}: ${Object.keys(facts).length} facts, ${history.length} rounds`);
