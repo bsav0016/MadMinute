@@ -25,9 +25,11 @@ eas build --platform android --profile production   # produces an .aab
   - Quick presets: Easy +/-, Times tables, Mixed.
   - Review every question afterwards, with correct, incorrect and skipped counts.
   - Personal best badges for each setup.
-  - History with accuracy by operation, your trouble spots, and a 1 x 1 to 12 x 12 times table coloured by how well you know each fact.
+  - A daily goal and a streak with a built-in rest day, and Today's practice: one tap starts the next times table to work on.
+  - History with accuracy by operation, your trouble spots, a level for each times table from 2s to 12s, and a 1 x 1 to 12 x 12 times table coloured by how well you know each fact.
+  - An optional daily reminder, off until you turn it on.
   - Optional Focus mode that mixes in the problems you miss most.
-  - Up to 12 players on one device, each with their own settings, history and personal bests. Back up a player's progress as text and restore it on a new phone.
+  - Up to 12 players on one device, each with their own settings, history and personal bests. Back up a player's progress as text (goal and streak included) and restore it on a new phone.
   - Works with a screen reader and large text, with marks and patterns as well as colour.
   - Share your result with one tap.
 
@@ -43,8 +45,27 @@ eas build --platform android --profile production   # produces an .aab
 - **Ads:** none. **Account required:** no.
 - **Content rating:** questionnaire, answer no to everything (expected: Everyone).
 - **Target audience:** if you include children under 13, Play's Families policy applies. The app has no ads, accounts or tracking, but decide this deliberately.
-- **Permissions:** none requested.
+- **Permissions:** 1.5.0 adds `POST_NOTIFICATIONS` (Android 13 and later, asked only when the reminder is turned on) and `RECEIVE_BOOT_COMPLETED` (so a reminder survives a restart), both added by the notifications library. Play lists them on the store page automatically. Before 1.5.0: none.
 - **New personal accounts:** Play requires a closed test with at least 12 testers opted in for 14 days before you can apply for production access.
+
+## 1.5.0 release notes (Play, 500 limit)
+
+```
+<en-US>
+- Daily goal and streak with a built-in rest day, kept on your device.
+- Today's practice: one tap starts the next times table to work on.
+- Times table levels in History, with a Practice button for each table.
+- Optional daily reminder, off until you turn it on. Nothing is sent anywhere.
+- Backups now include your goal and streak.
+</en-US>
+```
+
+## 1.5.0 declarations
+
+- **Data safety:** still no data collected and no data shared. The goal, streak and reminder time stay on the device; the reminder is a local notification, with no push service and no token.
+- **Families policy / target audience:** **not verified.** The streak and reminder are opt-in (reminder), local, calm and name no one, and there are no points, ads or accounts, but check the current Families policy text on engagement features and notifications for apps that include children before releasing, and decide the target audience deliberately.
+- **Permission declarations:** Play may ask why the app uses notifications and boot-completed: they are used only for the optional daily reminder.
+- **Needs a new build:** 1.5.0 includes a native module, so it cannot go over the air to 1.4.0; build an `.aab` as in the Build section.
 
 ## 1.4.0 release notes (Play, 500 limit)
 
