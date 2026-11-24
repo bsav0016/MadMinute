@@ -8,7 +8,9 @@ import { applyRound, FactStats } from './factStats';
 import { clearFacts, loadFacts, saveFacts } from './factStorage';
 import { MadMinuteQuestion } from './MadMinuteQuestion';
 import { focusPool, tablePool } from './focus';
-import { emptyPractice, Goal, nextPractice, PracticeRecord, PracticeSetup, recordPracticeRound, withGoal } from './practice';
+import {
+    emptyPractice, Goal, levelUps, nextPractice, PracticeRecord, PracticeSetup, recordPracticeRound, TableStatus, withGoal,
+} from './practice';
 import { clearPractice, loadPractice, savePractice } from './practiceStorage';
 import {
     addProfile as addToRegistry, AvatarId, changeProfile as changeInRegistry, defaultRegistry, loadRegistry, MAX_PROFILES,
@@ -27,8 +29,10 @@ interface MadMinuteContextType {
     submitResponse: (response: string, id: number) => void;
     markQuestionShown: () => void;
     resetMadMinute: () => void;
-    // Starts a round with the setup suggested for today (see nextPractice) and returns it.
-    startPractice: () => PracticeSetup;
+    // Starts a round with the setup suggested for today (see nextPractice), or of the given times table, and returns it.
+    startPractice: (table?: number) => PracticeSetup;
+    // The tables that went up a level in the round just recorded.
+    latestLevelUps: () => TableStatus[];
     history: RoundRecord[];
     recordRound: () => RoundRecord | null;
     clearHistory: () => void;
@@ -58,6 +62,7 @@ const MadMinuteContext = createContext<MadMinuteContextType>({
     markQuestionShown: () => {},
     resetMadMinute: () => {},
     startPractice: () => nextPractice({}, new MadMinuteSettings()),
+    latestLevelUps: () => [],
     history: [],
     recordRound: () => null,
     clearHistory: () => {},
@@ -131,6 +136,8 @@ export const MadMinuteProvider: React.FC<{ children: ReactNode }> = ({ children 
     // Each round gets an id when it starts, so the results screen saving it twice (a remount, say) cannot add it twice.
     const roundId = useRef(newRoundId());
     const recordedRound = useRef<{ id: string; record: RoundRecord | null } | null>(null);
+    // The tables that moved up a level when the round was recorded, for the results screen.
+    const roundLevelUps = useRef<TableStatus[]>([]);
 
     const changeHistory = (next: RoundRecord[]) => {
         historyRef.current = next;
@@ -276,6 +283,7 @@ export const MadMinuteProvider: React.FC<{ children: ReactNode }> = ({ children 
 
     const resetMadMinute = () => {
         roundId.current = newRoundId();
+        roundLevelUps.current = [];
         const updatedMadMinute = new MadMinuteClass(madMinute.settings, [], madMinute.table);
         setMadMinute(updatedMadMinute);
     }
@@ -285,9 +293,11 @@ export const MadMinuteProvider: React.FC<{ children: ReactNode }> = ({ children 
         round.table !== null ? tablePool(factsRef.current, round.table) : focusPool(factsRef.current, round.settings);
 
     // "Today's practice": a new round with the suggested setup. The player's own settings are not changed or saved.
-    const startPractice = (): PracticeSetup => {
-        const setup = nextPractice(factsRef.current, madMinute.settings);
+    const startPractice = (table?: number): PracticeSetup => {
+        const suggested = nextPractice(factsRef.current, madMinute.settings);
+        const setup = table === undefined ? suggested : { ...suggested, table };
         roundId.current = newRoundId();
+        roundLevelUps.current = [];
         setMadMinute(new MadMinuteClass(madMinute.settings, [], setup.table));
         return setup;
     }
@@ -304,6 +314,8 @@ export const MadMinuteProvider: React.FC<{ children: ReactNode }> = ({ children 
             if (historyLoaded.current) saveHistory(next, registryRef.current.active);
 
             const nextFacts = applyRound(factsRef.current, madMinute.questions, playedAt);
+            // Before the saved facts have loaded the old level is not known, so nothing is claimed.
+            roundLevelUps.current = factsLoaded.current ? levelUps(factsRef.current, nextFacts) : [];
             changeFacts(nextFacts);
             if (factsLoaded.current) {
                 saveFacts(nextFacts, registryRef.current.active);
@@ -359,6 +371,7 @@ export const MadMinuteProvider: React.FC<{ children: ReactNode }> = ({ children 
         goalBeforeLoad.current = null;
         changePractice(emptyPractice());
         roundId.current = newRoundId();
+        roundLevelUps.current = [];
         recordedRound.current = null;
         setMadMinute(new MadMinuteClass());
     };
@@ -428,7 +441,7 @@ export const MadMinuteProvider: React.FC<{ children: ReactNode }> = ({ children 
 
     return (
         <MadMinuteContext.Provider value={{
-            madMinute, updateSettings, addQuestion, submitResponse, markQuestionShown, resetMadMinute, startPractice, history, recordRound,
+            madMinute, updateSettings, addQuestion, submitResponse, markQuestionShown, resetMadMinute, startPractice, latestLevelUps: () => roundLevelUps.current, history, recordRound,
             clearHistory, facts, practice, setGoal, profiles: registry.profiles, activeProfile, addProfile, switchProfile, changeProfile,
             removeProfile, exportProgress, importProgress,
         }}>

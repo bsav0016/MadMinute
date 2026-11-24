@@ -1,4 +1,6 @@
-import { GoalProgress, goalProgress, PracticeRecord, PracticeSetup, streakView } from "./practice";
+import {
+    GoalProgress, goalProgress, PracticeRecord, PracticeSetup, streakView, TABLE_FACTS, TableLevel, TableStatus,
+} from "./practice";
 
 // The words for the goal and streak on the home screen. Calm on purpose: it never says a streak was lost, and a missed
 // day is "a rest day", not a failure.
@@ -47,4 +49,35 @@ export function hasPlayed(record: PracticeRecord): boolean {
 /** The line under the "Today's practice" button: what the round will be. */
 export function practiceHint(setup: PracticeSetup): string {
     return setup.table === null ? "Your usual setup" : `The ${setup.table} times table`;
+}
+
+const LEVEL_WORDS: Record<TableLevel, string> = {
+    new: "Not started",
+    learning: "Learning",
+    known: "Known",
+    mastered: "Mastered",
+};
+
+/** The level in words. Words and a mark always go together, so colour is never the only signal. */
+export function levelWord(level: TableLevel): string {
+    return LEVEL_WORDS[level];
+}
+
+const LEVEL_MARKS: Record<TableLevel, string> = { new: "–", learning: "•", known: "✓", mastered: "★" };
+
+export function levelMark(level: TableLevel): string {
+    return LEVEL_MARKS[level];
+}
+
+/** For a row of the table levels, as a screen reader should say it: "7s: Learning, 8 of 12 facts solid". */
+export function tableRowText(status: TableStatus): string {
+    const facts = status.started === 0 ? "" : `, ${status.solid} of ${TABLE_FACTS} facts solid`;
+    return `${status.table}s: ${levelWord(status.level)}${facts}`;
+}
+
+/** The line on the results screen for a table that moved up, or null for a move that is not worth a line (starting a table). */
+export function levelUpText(status: TableStatus): string | null {
+    if (status.level === "mastered") return `You have mastered the ${status.table}s!`;
+    if (status.level === "known") return `You know your ${status.table}s now!`;
+    return null;
 }

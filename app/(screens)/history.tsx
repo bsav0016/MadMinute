@@ -8,6 +8,9 @@ import { displayOperator } from "@/contexts/MadMinuteContext/MadMinuteOperator";
 import { weakestFacts } from "@/contexts/MadMinuteContext/factStats";
 import { factLabel, gridFactsNeedingWork, spotDetail, timesTableGrid } from "@/contexts/MadMinuteContext/troubleSpots";
 import { TimesTableGrid } from "@/components/TimesTableGrid";
+import { TableLevels } from "@/components/TableLevels";
+import { useRouteTo } from "@/contexts/RouteContext";
+import { Routes } from "@/constants/Routes";
 import { scoreText } from "@/contexts/MadMinuteContext/personalBest";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import React from "react";
@@ -17,7 +20,8 @@ const BAR_AREA_HEIGHT = 90;
 const TROUBLE_SPOTS_SHOWN = 5;
 
 export default function History() {
-    const { history, clearHistory, facts } = useMadMinute();
+    const { history, clearHistory, facts, startPractice } = useMadMinute();
+    const { routeTo } = useRouteTo();
     const surface = useThemeColor({}, 'surface');
     const border = useThemeColor({}, 'border');
     const muted = useThemeColor({}, 'muted');
@@ -40,6 +44,11 @@ export default function History() {
                 { text: "Clear", style: "destructive", onPress: clearHistory },
             ]
         );
+    };
+
+    const practiceTable = (table: number) => {
+        startPractice(table);
+        routeTo(Routes.PlayMadMinute);
     };
 
     const card = [styles.card, { backgroundColor: surface, borderColor: border }];
@@ -110,6 +119,13 @@ export default function History() {
                             ))
                         )}
                     </ThemedView>
+
+                    {hasMultiplication && (
+                        <ThemedView style={card}>
+                            <ThemedText style={cardTitle}>Times table levels</ThemedText>
+                            <TableLevels facts={facts} onPractice={practiceTable} />
+                        </ThemedView>
+                    )}
 
                     {hasMultiplication && (
                         <ThemedView style={card}>

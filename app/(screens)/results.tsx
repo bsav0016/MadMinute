@@ -16,6 +16,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Platform, ScrollView, Share, StyleSheet, Text, View } from "react-native";
 import { Routes } from "@/constants/Routes";
 import { useThemeColor } from "@/hooks/useThemeColor";
+import { levelUpText } from "@/contexts/MadMinuteContext/practiceText";
 
 type Outcome = "correct" | "incorrect" | "skipped";
 
@@ -81,7 +82,7 @@ const QuestionResult = ({question, answer, response, header=false}: QuestionResu
 }
 
 export default function Results() {
-    const { madMinute, resetMadMinute, recordRound, history } = useMadMinute();
+    const { madMinute, resetMadMinute, recordRound, history, latestLevelUps } = useMadMinute();
     const { routeReplace } = useRouteTo();
     const surface = useThemeColor({}, 'surface');
     const border = useThemeColor({}, 'border');
@@ -94,6 +95,11 @@ export default function Results() {
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setRecord(recordRound());
     }, []);
+
+    // Tables that went up a level with this round ("You know your 7s now!"). Read after the round is recorded.
+    const levelUpLines = record
+        ? latestLevelUps().map(levelUpText).filter((line): line is string => line !== null)
+        : [];
 
     const bestInfo = useMemo(() => record ? getBestInfo(history, record) : null, [history, record]);
 
@@ -142,6 +148,11 @@ export default function Results() {
                         <Text style={styles.bestBadgeText}>New personal best!</Text>
                     </View>
                 )}
+                {levelUpLines.map((line) => (
+                    <View key={line} style={styles.bestBadge} accessible accessibilityLabel={line}>
+                        <Text style={styles.bestBadgeText}>{line}</Text>
+                    </View>
+                ))}
                 {bestInfo?.previousBest && (
                     <ThemedText type="default" style={{ color: muted }}>
                         {bestInfo.isNewBest ? "Previous best" : "Your best"} for this setup: {scoreText(bestInfo.previousBest)}
