@@ -404,6 +404,7 @@ export const MadMinuteProvider: React.FC<{ children: ReactNode }> = ({ children 
         settings: madMinute.settings,
         history,
         facts,
+        practice,
     });
 
     // Adds a backup as a new player and switches to them. The id is kept if this device has no such player (so a
@@ -423,6 +424,7 @@ export const MadMinuteProvider: React.FC<{ children: ReactNode }> = ({ children 
         const saved = await Promise.all([
             saveHistory(backup.history, id),
             saveFacts(backup.facts, id),
+            backup.practice ? savePractice(backup.practice, id) : Promise.resolve(true),
             backup.settings ? saveSettings(backup.settings, id) : Promise.resolve(true),
         ]);
         if (!saved.every(Boolean)) {

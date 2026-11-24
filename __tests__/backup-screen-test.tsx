@@ -67,6 +67,7 @@ const owlBackup = () => buildBackupText({
     settings: null,
     history: [record()],
     facts: {},
+    practice: null,
 });
 
 async function openSheet(tree: Tree) {
