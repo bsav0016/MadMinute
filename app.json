@@ -2,7 +2,7 @@
   "expo": {
     "name": "Math Mad Minute",
     "slug": "MadMinuteFrontend",
-    "version": "1.4.0",
+    "version": "1.5.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "madminute",
@@ -39,6 +39,12 @@
         }
       ],
       "expo-asset",
+      [
+        "expo-notifications",
+        {
+          "color": "#394EB6"
+        }
+      ],
       "./plugins/withOptionalPortrait"
     ],
     "experiments": {

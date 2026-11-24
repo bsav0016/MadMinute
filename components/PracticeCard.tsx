@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { AppState, StyleSheet, TouchableOpacity, View } from "react-native";
 import { ThemedText } from "@/components/ThemedText";
+import { ReminderSheet } from "@/components/ReminderSheet";
+import { reminderTimeText } from "@/contexts/MadMinuteContext/reminder";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { useMadMinute } from "@/contexts/MadMinuteContext/MadMinuteContext";
 import { goalProgress, nextGoal } from "@/contexts/MadMinuteContext/practice";
@@ -10,7 +12,8 @@ const roundsADay = (n: number) => `${n} ${n === 1 ? "round" : "rounds"} a day`;
 
 // Today's goal and the streak, under the title. It appears once the player has finished a round.
 export function PracticeCard() {
-    const { practice, setGoal } = useMadMinute();
+    const { practice, setGoal, reminder } = useMadMinute();
+    const [reminderOpen, setReminderOpen] = useState(false);
     const surface = useThemeColor({}, 'surface');
     const border = useThemeColor({}, 'border');
     const muted = useThemeColor({}, 'muted');
@@ -54,6 +57,17 @@ export function PracticeCard() {
             >
                 <ThemedText style={[styles.changeText, { color: muted }]}>{`Goal: ${roundsADay(practice.goal)} (change)`}</ThemedText>
             </TouchableOpacity>
+            <TouchableOpacity
+                onPress={() => setReminderOpen(true)}
+                accessibilityRole="button"
+                accessibilityLabel={`Daily reminder: ${reminder.enabled ? `on at ${reminderTimeText(reminder)}` : "off"}. Change`}
+                style={styles.change}
+            >
+                <ThemedText style={[styles.changeText, { color: muted }]}>
+                    {`Reminder: ${reminder.enabled ? reminderTimeText(reminder) : "off"} (change)`}
+                </ThemedText>
+            </TouchableOpacity>
+            <ReminderSheet visible={reminderOpen} onClose={() => setReminderOpen(false)} />
         </View>
     );
 }

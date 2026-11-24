@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useRef, useState, ReactNode } from 'react';
+import { AppState } from 'react-native';
 import { MadMinuteClass } from './MadMinuteClass';
 import { MadMinuteSettings } from './MadMinuteSettings';
 import { loadSettings, saveSettings } from './settingsStorage';
@@ -9,9 +10,12 @@ import { clearFacts, loadFacts, saveFacts } from './factStorage';
 import { MadMinuteQuestion } from './MadMinuteQuestion';
 import { focusPool, tablePool } from './focus';
 import {
-    emptyPractice, Goal, levelUps, nextPractice, PracticeRecord, PracticeSetup, recordPracticeRound, TableStatus, withGoal,
+    emptyPractice, Goal, goalProgress, levelUps, nextPractice, PracticeRecord, PracticeSetup, recordPracticeRound, TableStatus, withGoal,
 } from './practice';
 import { clearPractice, loadPractice, savePractice } from './practiceStorage';
+import { DEFAULT_REMINDER, Reminder, upcomingReminders } from './reminder';
+import { loadReminder, saveReminder } from './reminderStorage';
+import { reminderPermission, setScheduledReminders } from './notifications';
 import {
     addProfile as addToRegistry, AvatarId, changeProfile as changeInRegistry, defaultRegistry, loadRegistry, MAX_PROFILES,
     newProfileId, Profile, profileLabel, ProfileRegistry, randomTitle, removeProfile as removeFromRegistry,
@@ -19,6 +23,9 @@ import {
 } from '@/storage/profiles';
 import { Backup, buildBackupText } from './backup';
 
+
+// Turning the reminder on asks the phone for permission, and the player may say no (or the phone may not have it).
+export type ReminderResult = { ok: true } | { ok: false; reason: 'denied' | 'unavailable' };
 
 export type ImportResult = { ok: true; label: string } | { ok: false; reason: string };
 
@@ -40,6 +47,9 @@ interface MadMinuteContextType {
     // The daily goal and streak (see practice.ts), and a way to change the goal.
     practice: PracticeRecord;
     setGoal: (goal: Goal) => void;
+    // The optional daily reminder, a notification on this device. Turning it on asks for permission.
+    reminder: Reminder;
+    setReminder: (next: Reminder) => Promise<ReminderResult>;
     // The people who share this device. Each has their own settings, history and record of problems.
     profiles: Profile[];
     activeProfile: Profile;
@@ -69,6 +79,8 @@ const MadMinuteContext = createContext<MadMinuteContextType>({
     facts: {},
     practice: emptyPractice(),
     setGoal: () => {},
+    reminder: DEFAULT_REMINDER,
+    setReminder: async () => ({ ok: false, reason: 'unavailable' }),
     profiles: initialRegistry.profiles,
     activeProfile: initialRegistry.profiles[0],
     addProfile: () => {},
@@ -228,6 +240,49 @@ export const MadMinuteProvider: React.FC<{ children: ReactNode }> = ({ children 
         changePractice(withGoal(practiceRef.current, goal));
         if (practiceLoaded.current) savePractice(practiceRef.current, registryRef.current.active);
         else goalBeforeLoad.current = goal;
+    };
+
+    // The reminder belongs to the device. It is loaded at launch, and scheduled for the next few days whenever it changes,
+    // the app comes back to the front, or a round is finished (today's is skipped once the goal is done).
+    const [reminder, setReminderState] = useState<Reminder>(DEFAULT_REMINDER);
+    const [reminderLoaded, setReminderLoaded] = useState(false);
+    const reminderChanged = useRef(false);
+    const [foregroundCount, setForegroundCount] = useState(0);
+    // True while reminders may be scheduled with the phone, so turning them off cancels them once and a player who
+    // never used them never loads the notifications module.
+    const reminderScheduled = useRef(false);
+
+    useEffect(() => {
+        loadReminder().then((saved) => {
+            if (saved && !reminderChanged.current) setReminderState(saved);
+            setReminderLoaded(true);
+        });
+    }, []);
+
+    useEffect(() => {
+        const subscription = AppState.addEventListener('change', (state) => {
+            if (state === 'active') setForegroundCount((count) => count + 1);
+        });
+        return () => subscription.remove();
+    }, []);
+
+    useEffect(() => {
+        if (!reminderLoaded) return;
+        if (!reminder.enabled && !reminderScheduled.current) return;
+        reminderScheduled.current = reminder.enabled;
+        const now = Date.now();
+        setScheduledReminders(upcomingReminders(reminder, now, goalProgress(practice, now).met));
+    }, [reminder, reminderLoaded, practice, foregroundCount]);
+
+    const setReminder = async (next: Reminder): Promise<ReminderResult> => {
+        reminderChanged.current = true;
+        if (next.enabled && !reminder.enabled) {
+            const permission = await reminderPermission(true);
+            if (permission !== 'granted') return { ok: false, reason: permission };
+        }
+        setReminderState(next);
+        saveReminder(next);
+        return { ok: true };
     };
 
     const updateSettings = (newSettings: MadMinuteSettings) => {
@@ -444,7 +499,7 @@ export const MadMinuteProvider: React.FC<{ children: ReactNode }> = ({ children 
     return (
         <MadMinuteContext.Provider value={{
             madMinute, updateSettings, addQuestion, submitResponse, markQuestionShown, resetMadMinute, startPractice, latestLevelUps: () => roundLevelUps.current, history, recordRound,
-            clearHistory, facts, practice, setGoal, profiles: registry.profiles, activeProfile, addProfile, switchProfile, changeProfile,
+            clearHistory, facts, practice, setGoal, reminder, setReminder, profiles: registry.profiles, activeProfile, addProfile, switchProfile, changeProfile,
             removeProfile, exportProgress, importProgress,
         }}>
             {children}
