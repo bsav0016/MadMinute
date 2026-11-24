@@ -1,4 +1,4 @@
-import { GoalProgress, goalProgress, PracticeRecord, streakView } from "./practice";
+import { GoalProgress, goalProgress, PracticeRecord, PracticeSetup, streakView } from "./practice";
 
 // The words for the goal and streak on the home screen. Calm on purpose: it never says a streak was lost, and a missed
 // day is "a rest day", not a failure.
@@ -42,4 +42,9 @@ export function practiceSummary(record: PracticeRecord, now: number): string {
 /** Whether to show the card at all: not until the player has finished a round, so a new install looks the same as ever. */
 export function hasPlayed(record: PracticeRecord): boolean {
     return record.streak.lastDay !== null;
+}
+
+/** The line under the "Today's practice" button: what the round will be. */
+export function practiceHint(setup: PracticeSetup): string {
+    return setup.table === null ? "Your usual setup" : `The ${setup.table} times table`;
 }

@@ -22,6 +22,7 @@ export interface RoundRecord {
     minValue: number;
     maxValue: number;
     durationSeconds: number;
+    table?: number; // set for a round of one times table, whose numbers are 1 to 12 whatever the player's usual range
     correct: number;
     incorrect: number;
     skipped: number;
@@ -40,7 +41,8 @@ export function buildRoundRecord(
     settings: MadMinuteSettings,
     questions: MadMinuteQuestion[],
     id: string,
-    playedAt: number
+    playedAt: number,
+    table: number | null = null
 ): RoundRecord | null {
     const byOperator: Partial<Record<MadMinuteOperator, OperatorTally>> = {};
     let correct = 0;
@@ -71,6 +73,7 @@ export function buildRoundRecord(
         minValue: settings.minValue,
         maxValue: settings.maxValue,
         durationSeconds: settings.durationSeconds,
+        ...(table === null ? {} : { table }),
         correct,
         incorrect,
         skipped,
@@ -113,6 +116,9 @@ function parseRecord(data: unknown): RoundRecord | null {
         byOperator[op as MadMinuteOperator] = tally;
     }
 
+    // An optional times table, kept only when it is a whole number from 1 to 12.
+    const table = Number.isInteger(d.table) && (d.table as number) >= 1 && (d.table as number) <= 12 ? (d.table as number) : null;
+
     return {
         id: d.id,
         playedAt: d.playedAt,
@@ -120,6 +126,7 @@ function parseRecord(data: unknown): RoundRecord | null {
         minValue: d.minValue as number,
         maxValue: d.maxValue as number,
         durationSeconds: d.durationSeconds,
+        ...(table === null ? {} : { table }),
         correct: d.correct,
         incorrect: d.incorrect,
         skipped: d.skipped,

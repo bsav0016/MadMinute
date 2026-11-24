@@ -75,7 +75,8 @@ export function recentTrend(history: RoundRecord[], count = TREND_ROUNDS): Trend
 }
 
 // For example "+ −  ·  60 sec".
-export function setupLabel(record: Pick<RoundRecord, "operators" | "durationSeconds">): string {
+export function setupLabel(record: Pick<RoundRecord, "operators" | "durationSeconds" | "table">): string {
+    if (record.table) return `${record.table}s table  ·  ${record.durationSeconds} sec`;
     return `${record.operators.map(displayOperator).join(" ")}  ·  ${record.durationSeconds} sec`;
 }
 

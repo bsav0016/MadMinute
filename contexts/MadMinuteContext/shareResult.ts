@@ -35,7 +35,9 @@ export function resultMessage(record: RoundRecord, isNewBest: boolean, os: strin
     const attempted = record.correct + record.incorrect + record.skipped;
     if (attempted === 0) return null;
     const seconds = record.durationSeconds;
-    const setup = `${operatorWords(record.operators)}, numbers ${record.minValue} to ${record.maxValue}`;
+    const setup = record.table
+        ? `the ${record.table} times table`
+        : `${operatorWords(record.operators)}, numbers ${record.minValue} to ${record.maxValue}`;
     return [
         `I got ${record.correct}/${attempted} in a ${seconds}-second Math Mad Minute (${setup}).${isNewBest ? " A new personal best!" : ""}`,
         `Think you can beat it? ${shareLink(os)}`,

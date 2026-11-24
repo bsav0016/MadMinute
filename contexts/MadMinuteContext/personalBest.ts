@@ -2,8 +2,9 @@ import { RoundRecord } from "./roundRecord";
 
 // A personal best is kept per mix of operations and round length. The number range is left out on purpose, so
 // changing it a little does not start a new set of bests.
-export function setupKey(record: Pick<RoundRecord, "operators" | "durationSeconds">): string {
-    return `${[...record.operators].sort().join("")}|${record.durationSeconds}`;
+// A round of one times table is its own setup, so it is never compared with rounds of every table.
+export function setupKey(record: Pick<RoundRecord, "operators" | "durationSeconds" | "table">): string {
+    return `${[...record.operators].sort().join("")}|${record.durationSeconds}${record.table ? `|t${record.table}` : ""}`;
 }
 
 function attempted(record: RoundRecord): number {

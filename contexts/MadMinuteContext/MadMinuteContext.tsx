@@ -7,8 +7,8 @@ import { clearHistory as clearStoredHistory, loadHistory, saveHistory } from './
 import { applyRound, FactStats } from './factStats';
 import { clearFacts, loadFacts, saveFacts } from './factStorage';
 import { MadMinuteQuestion } from './MadMinuteQuestion';
-import { focusPool } from './focus';
-import { emptyPractice, Goal, PracticeRecord, recordPracticeRound, withGoal } from './practice';
+import { focusPool, tablePool } from './focus';
+import { emptyPractice, Goal, nextPractice, PracticeRecord, PracticeSetup, recordPracticeRound, withGoal } from './practice';
 import { clearPractice, loadPractice, savePractice } from './practiceStorage';
 import {
     addProfile as addToRegistry, AvatarId, changeProfile as changeInRegistry, defaultRegistry, loadRegistry, MAX_PROFILES,
@@ -27,6 +27,8 @@ interface MadMinuteContextType {
     submitResponse: (response: string, id: number) => void;
     markQuestionShown: () => void;
     resetMadMinute: () => void;
+    // Starts a round with the setup suggested for today (see nextPractice) and returns it.
+    startPractice: () => PracticeSetup;
     history: RoundRecord[];
     recordRound: () => RoundRecord | null;
     clearHistory: () => void;
@@ -55,6 +57,7 @@ const MadMinuteContext = createContext<MadMinuteContextType>({
     submitResponse: () => {},
     markQuestionShown: () => {},
     resetMadMinute: () => {},
+    startPractice: () => nextPractice({}, new MadMinuteSettings()),
     history: [],
     recordRound: () => null,
     clearHistory: () => {},
@@ -113,7 +116,7 @@ export const MadMinuteProvider: React.FC<{ children: ReactNode }> = ({ children 
         loadSettings(profileId).then((saved) => {
             if (generation !== profileGeneration.current) return; // switched while loading
             if (saved && !settingsChanged.current) {
-                setMadMinute((current) => new MadMinuteClass(saved, current.questions));
+                setMadMinute((current) => new MadMinuteClass(saved, current.questions, current.table));
             }
         });
     }, [registryLoaded, profileId]);
@@ -223,6 +226,7 @@ export const MadMinuteProvider: React.FC<{ children: ReactNode }> = ({ children 
     const updateSettings = (newSettings: MadMinuteSettings) => {
         settingsChanged.current = true;
         saveForActiveProfile((id) => saveSettings(newSettings, id));
+        // New settings mean a round the player set up themselves, so a round of one table ends.
         const updatedMadMinute = new MadMinuteClass(
             newSettings,
             madMinute.questions
@@ -231,11 +235,12 @@ export const MadMinuteProvider: React.FC<{ children: ReactNode }> = ({ children 
     };
 
     const addQuestion = () => {
-        const newQuestion = madMinute.generateNewQuestion(Date.now(), focusPool(factsRef.current, madMinute.settings));
+        const newQuestion = madMinute.generateNewQuestion(Date.now(), weakSpotsFor(madMinute));
     
         const updatedMadMinute = new MadMinuteClass(
             madMinute.settings,
-            [...madMinute.questions, newQuestion]
+            [...madMinute.questions, newQuestion],
+            madMinute.table
         );
     
         setMadMinute(updatedMadMinute);
@@ -246,14 +251,13 @@ export const MadMinuteProvider: React.FC<{ children: ReactNode }> = ({ children 
         const updatedQuestions = madMinute.questions.map((question) =>
             question.id === id ? question.withResponse(response, answeredAt) : question
         );
-        let updatedMadMinute = new MadMinuteClass(madMinute.settings, updatedQuestions);
+        let updatedMadMinute = new MadMinuteClass(madMinute.settings, updatedQuestions, madMinute.table);
 
-        const newQuestion = updatedMadMinute.generateNewQuestion(
-            Date.now(), focusPool(factsRef.current, updatedMadMinute.settings)
-        );
+        const newQuestion = updatedMadMinute.generateNewQuestion(Date.now(), weakSpotsFor(updatedMadMinute));
         updatedMadMinute = new MadMinuteClass(
             updatedMadMinute.settings,
-            [...updatedMadMinute.questions, newQuestion]
+            [...updatedMadMinute.questions, newQuestion],
+            updatedMadMinute.table
         );
 
         setMadMinute(updatedMadMinute);
@@ -266,21 +270,33 @@ export const MadMinuteProvider: React.FC<{ children: ReactNode }> = ({ children 
         setMadMinute((current) => {
             const newest = current.questions.at(-1);
             if (!newest || newest.response) return current;
-            return new MadMinuteClass(current.settings, [...current.questions.slice(0, -1), newest.withShownAt(shownAt)]);
+            return new MadMinuteClass(current.settings, [...current.questions.slice(0, -1), newest.withShownAt(shownAt)], current.table);
         });
     };
 
     const resetMadMinute = () => {
         roundId.current = newRoundId();
-        const updatedMadMinute = new MadMinuteClass(madMinute.settings, []);
+        const updatedMadMinute = new MadMinuteClass(madMinute.settings, [], madMinute.table);
         setMadMinute(updatedMadMinute);
+    }
+
+    // The facts to ask more often: the weak ones of the table in a round of one table, otherwise focus mode's.
+    const weakSpotsFor = (round: MadMinuteClass) =>
+        round.table !== null ? tablePool(factsRef.current, round.table) : focusPool(factsRef.current, round.settings);
+
+    // "Today's practice": a new round with the suggested setup. The player's own settings are not changed or saved.
+    const startPractice = (): PracticeSetup => {
+        const setup = nextPractice(factsRef.current, madMinute.settings);
+        roundId.current = newRoundId();
+        setMadMinute(new MadMinuteClass(madMinute.settings, [], setup.table));
+        return setup;
     }
 
     // Called by the results screen. Saves the finished round once and returns its record (null if nothing was attempted).
     const recordRound = (): RoundRecord | null => {
         if (recordedRound.current?.id === roundId.current) return recordedRound.current.record;
         const playedAt = Date.now();
-        const record = buildRoundRecord(madMinute.settings, madMinute.questions, roundId.current, playedAt);
+        const record = buildRoundRecord(madMinute.effectiveSettings(), madMinute.questions, roundId.current, playedAt, madMinute.table);
         recordedRound.current = { id: roundId.current, record };
         if (record) {
             const next = addRecord(historyRef.current, record);
@@ -412,7 +428,7 @@ export const MadMinuteProvider: React.FC<{ children: ReactNode }> = ({ children 
 
     return (
         <MadMinuteContext.Provider value={{
-            madMinute, updateSettings, addQuestion, submitResponse, markQuestionShown, resetMadMinute, history, recordRound,
+            madMinute, updateSettings, addQuestion, submitResponse, markQuestionShown, resetMadMinute, startPractice, history, recordRound,
             clearHistory, facts, practice, setGoal, profiles: registry.profiles, activeProfile, addProfile, switchProfile, changeProfile,
             removeProfile, exportProgress, importProgress,
         }}>
