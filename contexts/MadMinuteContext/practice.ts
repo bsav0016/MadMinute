@@ -156,6 +156,11 @@ export function goalProgress(record: PracticeRecord, now: number): GoalProgress 
     return { done, goal: record.goal, met: done >= record.goal };
 }
 
+/** The goal after this one when the player taps to change it: 1, 2, 3, then 1 again. */
+export function nextGoal(goal: Goal): Goal {
+    return GOAL_OPTIONS[(GOAL_OPTIONS.indexOf(goal) + 1) % GOAL_OPTIONS.length];
+}
+
 export function withGoal(record: PracticeRecord, goal: Goal): PracticeRecord {
     return { ...record, goal };
 }

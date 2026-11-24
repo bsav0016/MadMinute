@@ -6,6 +6,7 @@ import { ThemedView } from "@/components/ThemedView";
 import { ThemedText } from "@/components/ThemedText";
 import { GeneralButton } from "@/components/GeneralButton";
 import { useThemeColor } from "@/hooks/useThemeColor";
+import { PracticeCard } from "@/components/PracticeCard";
 import { ProfileSheet } from "@/components/ProfileSheet";
 import { useMadMinute } from "@/contexts/MadMinuteContext/MadMinuteContext";
 import { avatarInfo, profileLabel } from "@/storage/profiles";
@@ -58,6 +59,8 @@ export default function HomeScreen() {
       >
         <ThemedText style={[styles.sampleText, { color: tint }]}>7 × 8 = ?</ThemedText>
       </ThemedView>
+
+      <PracticeCard />
 
       <ThemedView style={styles.homeButtonView}>
         {homeButtons.map((homeButton) => (
